@@ -11,15 +11,22 @@ def create_app(config_name=None):
         config_name = os.environ.get('FLASK_ENV', 'development')
 
     app = Flask(__name__)
-    # Production invariant check: never silently fall back to ephemeral SQLite in production
+    # Production invariant check: never silently fall back to ephemeral SQLite or default secret in production
     if config_name == 'production':
-        if not os.environ.get('DATABASE_URL'):
+        db_configured = bool(
+            os.environ.get('DATABASE_URL') or 
+            (os.environ.get('DB_USER') and os.environ.get('DB_NAME'))
+        )
+        if not db_configured:
             raise ValueError(
-                "DATABASE_URL environment variable must be configured in production (MySQL 8 or PostgreSQL). "
+                "A production database connection must be configured via DATABASE_URL or DB_* environment variables (PostgreSQL or MySQL 8). "
                 "Ephemeral SQLite fallback is disallowed in production."
             )
-        if not os.environ.get('SECRET_KEY'):
-            raise ValueError("SECRET_KEY environment variable must be set in production.")
+        secret = os.environ.get('SECRET_KEY')
+        if not secret or secret.strip() == 'bookwise-atelier-secret-key-default-2026':
+            raise ValueError(
+                "SECRET_KEY environment variable must be set in production to a unique, secure secret key (not the default development key)."
+            )
 
     config_class = config_by_name.get(config_name, config_by_name['default'])
     app.config.from_object(config_class)
@@ -95,11 +102,69 @@ def create_app(config_name=None):
         }
 
     # Custom CLI commands
+    import click
+
+    @app.cli.command('create-admin')
+    @click.option('--email', prompt=True, help='Administrator email address')
+    @click.option('--password', prompt=True, hide_input=True, confirmation_prompt=True, help='Administrator password')
+    @click.option('--name', default='Atelier Curator', help='Administrator display name')
+    def create_admin_command(email, password, name):
+        """CLI command to securely create or promote a curator administrator account."""
+        email = email.strip()
+        if not email or '@' not in email:
+            print("Error: A valid email address is required.")
+            return
+
+        if not password or len(password) < 8:
+            print("Error: Password must be at least 8 characters.")
+            return
+
+        from app.models.user import User
+        from app.models.preference import UserPreference
+
+        user = User.query.filter_by(email=email).first()
+        if user:
+            user.role = 'admin'
+            user.set_password(password)
+            if name:
+                user.name = name.strip()
+            db.session.commit()
+            print(f"User '{email}' updated to Administrator with updated credentials.")
+        else:
+            user = User(
+                name=name.strip() if name else 'Atelier Curator',
+                email=email,
+                role='admin'
+            )
+            user.set_password(password)
+            db.session.add(user)
+            db.session.flush()
+
+            pref = UserPreference(
+                user_id=user.id,
+                preferred_genres=['Philosophy', 'History', 'Fiction'],
+                preferred_languages=['English'],
+                age_preference='Adult',
+                preferred_duration=30,
+                interest_keywords=['wisdom', 'books', 'ideas'],
+                onboarding_completed=True,
+                theme_preference='light'
+            )
+            db.session.add(pref)
+            db.session.commit()
+            print(f"Administrator '{email}' created successfully.")
+
+    @app.cli.command('init-db')
+    def init_db_command():
+        """CLI command to create all tables and initialize schema idempotently."""
+        db.create_all()
+        print("Database schema initialized successfully.")
+
     @app.cli.command('seed-db')
     def seed_db_command():
-        """CLI command to seed the database with sample catalogue books and admin."""
+        """CLI command to seed the database with sample catalogue books."""
         from seeds.sample_books import seed_database
         count = seed_database(db)
-        print(f"Successfully populated database with {count} sample books and admin curator.")
+        print(f"Successfully populated database with {count} sample books.")
 
     return app

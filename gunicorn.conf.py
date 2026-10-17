@@ -9,6 +9,7 @@ workers = int(os.environ.get("WEB_CONCURRENCY", "2"))
 threads = int(os.environ.get("GUNICORN_THREADS", "2"))
 timeout = int(os.environ.get("GUNICORN_TIMEOUT", "120"))
 keepalive = 5
+preload_app = True
 
 # Logging to standard output/error for Render log console
 accesslog = "-"

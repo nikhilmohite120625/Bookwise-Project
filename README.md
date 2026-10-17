@@ -167,12 +167,20 @@ On initial run, BookWise automatically initializes the database schema and seeds
 
 ---
 
-## 🔑 Default Demo Accounts
+## 🔑 Administrator & Account Provisioning
 
-| Role | Email | Password |
-|---|---|---|
-| **Curator Admin** | `admin@bookwise.atelier` | `AdminAtelier2026!` |
-| **New Reader** | Self-register via `/register` | Minimum 8 characters |
+BookWise follows zero-hardcoded-credentials security standards:
+- **Reader Accounts**: Self-register via `/register` (passwords hashed using NIST/OWASP-approved `scrypt`).
+- **Curator Admin Account**: Can be provisioned via:
+  1. **Environment Variables**: Set `ADMIN_EMAIL` and `ADMIN_PASSWORD` in your `.env` or cloud dashboard. When initial database seeding runs, the admin account is securely created with a hashed password.
+  2. **CLI Command**: Run the interactive or scripted CLI tool:
+     ```bash
+     flask create-admin --email admin@example.com --password YourSecurePassword123! --name "Atelier Curator"
+     ```
+- **Catalogue Seeding**: Populate or reset the sample book collection:
+  ```bash
+  flask seed-db
+  ```
 
 ---
 

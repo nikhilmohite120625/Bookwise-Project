@@ -6,6 +6,43 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(BASE_DIR / '.env')
 
 
+def _resolve_database_uri():
+    """Resolves database URI from DATABASE_URL or discrete DB credentials from environment."""
+    raw_db_url = os.environ.get('DATABASE_URL')
+    if raw_db_url and raw_db_url.strip():
+        db_url = raw_db_url.strip()
+        # Handle dialect normalization:
+        # 1. Render PostgreSQL provides postgres:// which SQLAlchemy 2.0 requires as postgresql://
+        if db_url.startswith('postgres://'):
+            db_url = db_url.replace('postgres://', 'postgresql://', 1)
+        # 2. MySQL normalization to mysql+pymysql:// if mysql:// provided
+        elif db_url.startswith('mysql://'):
+            db_url = db_url.replace('mysql://', 'mysql+pymysql://', 1)
+        return db_url, False
+
+    # Check for discrete database connection environment variables
+    db_user = os.environ.get('DB_USER')
+    db_name = os.environ.get('DB_NAME')
+    if db_user and db_name:
+        from urllib.parse import quote_plus
+        db_pass = os.environ.get('DB_PASSWORD', '')
+        db_host = os.environ.get('DB_HOST', 'localhost')
+        db_port = os.environ.get('DB_PORT')
+        db_dialect = os.environ.get('DB_DIALECT', 'mysql+pymysql')
+        
+        encoded_pass = f":{quote_plus(db_pass)}" if db_pass else ""
+        port_str = f":{db_port}" if db_port else ""
+        return f"{db_dialect}://{quote_plus(db_user)}{encoded_pass}@{db_host}{port_str}/{db_name}", False
+
+    # Local SQLite fallback for development
+    instance_dir = BASE_DIR / 'instance'
+    instance_dir.mkdir(exist_ok=True)
+    return f"sqlite:///{instance_dir / 'bookwise.db'}", True
+
+
+_db_uri, _is_sqlite = _resolve_database_uri()
+
+
 class BaseConfig:
     """Base application configuration."""
     SECRET_KEY = os.environ.get('SECRET_KEY', 'bookwise-atelier-secret-key-default-2026')
@@ -24,25 +61,9 @@ class BaseConfig:
     RATELIMIT_STORAGE_URI = os.environ.get('RATELIMIT_STORAGE_URI', 'memory://')
     RATELIMIT_HEADERS_ENABLED = True
 
-    # Database resolution: MySQL primary with SQLite local fallback
-    raw_db_url = os.environ.get('DATABASE_URL')
-    if raw_db_url and raw_db_url.strip():
-        db_url = raw_db_url.strip()
-        # Handle dialect normalization:
-        # 1. Render PostgreSQL provides postgres:// which SQLAlchemy 2.0 requires as postgresql://
-        if db_url.startswith('postgres://'):
-            db_url = db_url.replace('postgres://', 'postgresql://', 1)
-        # 2. MySQL normalization to mysql+pymysql:// if mysql:// provided
-        elif db_url.startswith('mysql://'):
-            db_url = db_url.replace('mysql://', 'mysql+pymysql://', 1)
-        SQLALCHEMY_DATABASE_URI = db_url
-        IS_SQLITE = False
-    else:
-        # SQLite local development fallback
-        instance_dir = BASE_DIR / 'instance'
-        instance_dir.mkdir(exist_ok=True)
-        SQLALCHEMY_DATABASE_URI = f"sqlite:///{instance_dir / 'bookwise.db'}"
-        IS_SQLITE = True
+    # Database resolution
+    SQLALCHEMY_DATABASE_URI = _db_uri
+    IS_SQLITE = _is_sqlite
 
 
 class DevelopmentConfig(BaseConfig):
@@ -69,14 +90,7 @@ class ProductionConfig(BaseConfig):
     DEBUG = False
     ENV = 'production'
     SESSION_COOKIE_SECURE = True
-    
-    def __init__(self):
-        super().__init__()
-        # Validate production invariants: do not silently run in production with default secrets or missing database
-        if not os.environ.get('SECRET_KEY'):
-            raise ValueError("SECRET_KEY environment variable must be set in production.")
-        if not os.environ.get('DATABASE_URL'):
-            raise ValueError("DATABASE_URL environment variable must be configured in production (MySQL 8). Ephemeral SQLite fallback is disallowed in production.")
+    SECRET_KEY = os.environ.get('SECRET_KEY')
 
 
 config_by_name = {

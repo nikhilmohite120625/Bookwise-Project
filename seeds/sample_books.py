@@ -549,34 +549,40 @@ SAMPLE_BOOKS = [
 
 
 def seed_database(db_instance):
-    """Inserts sample books into the catalogue if empty."""
+    """Inserts sample books into the catalogue if empty, and provisions admin if credentials configured."""
+    import os
     from app.models.book import Book
     from app.models.user import User
     from app.models.preference import UserPreference
 
-    # Create admin user if none exists
-    admin_user = User.query.filter_by(email='admin@bookwise.atelier').first()
-    if not admin_user:
-        admin_user = User(
-            name='Atelier Curator',
-            email='admin@bookwise.atelier',
-            role='admin'
-        )
-        admin_user.set_password('AdminAtelier2026!')
-        db_instance.session.add(admin_user)
-        db_instance.session.flush()
+    # Create admin user only if explicitly configured via environment variables
+    admin_email = os.environ.get('ADMIN_EMAIL', 'admin@bookwise.atelier').strip()
+    admin_password = os.environ.get('ADMIN_PASSWORD')
 
-        pref = UserPreference(
-            user_id=admin_user.id,
-            preferred_genres=['Philosophy', 'History', 'Fiction'],
-            preferred_languages=['English'],
-            age_preference='Adult',
-            preferred_duration=30,
-            interest_keywords=['wisdom', 'books', 'ideas'],
-            onboarding_completed=True,
-            theme_preference='light'
-        )
-        db_instance.session.add(pref)
+    if admin_email and admin_password and admin_password.strip():
+        admin_user = User.query.filter_by(email=admin_email).first()
+        if not admin_user:
+            admin_name = os.environ.get('ADMIN_NAME', 'Atelier Curator').strip()
+            admin_user = User(
+                name=admin_name,
+                email=admin_email,
+                role='admin'
+            )
+            admin_user.set_password(admin_password.strip())
+            db_instance.session.add(admin_user)
+            db_instance.session.flush()
+
+            pref = UserPreference(
+                user_id=admin_user.id,
+                preferred_genres=['Philosophy', 'History', 'Fiction'],
+                preferred_languages=['English'],
+                age_preference='Adult',
+                preferred_duration=30,
+                interest_keywords=['wisdom', 'books', 'ideas'],
+                onboarding_completed=True,
+                theme_preference='light'
+            )
+            db_instance.session.add(pref)
 
     # Insert books
     added_count = 0
