@@ -11,6 +11,16 @@ def create_app(config_name=None):
         config_name = os.environ.get('FLASK_ENV', 'development')
 
     app = Flask(__name__)
+    # Production invariant check: never silently fall back to ephemeral SQLite in production
+    if config_name == 'production':
+        if not os.environ.get('DATABASE_URL'):
+            raise ValueError(
+                "DATABASE_URL environment variable must be configured in production (MySQL 8 or PostgreSQL). "
+                "Ephemeral SQLite fallback is disallowed in production."
+            )
+        if not os.environ.get('SECRET_KEY'):
+            raise ValueError("SECRET_KEY environment variable must be set in production.")
+
     config_class = config_by_name.get(config_name, config_by_name['default'])
     app.config.from_object(config_class)
 

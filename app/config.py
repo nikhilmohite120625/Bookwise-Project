@@ -25,10 +25,15 @@ class BaseConfig:
     RATELIMIT_HEADERS_ENABLED = True
 
     # Database resolution: MySQL primary with SQLite local fallback
-    db_url = os.environ.get('DATABASE_URL')
-    if db_url and db_url.strip():
-        # Handle dialect normalization if user passes mysql:// instead of mysql+pymysql://
-        if db_url.startswith('mysql://'):
+    raw_db_url = os.environ.get('DATABASE_URL')
+    if raw_db_url and raw_db_url.strip():
+        db_url = raw_db_url.strip()
+        # Handle dialect normalization:
+        # 1. Render PostgreSQL provides postgres:// which SQLAlchemy 2.0 requires as postgresql://
+        if db_url.startswith('postgres://'):
+            db_url = db_url.replace('postgres://', 'postgresql://', 1)
+        # 2. MySQL normalization to mysql+pymysql:// if mysql:// provided
+        elif db_url.startswith('mysql://'):
             db_url = db_url.replace('mysql://', 'mysql+pymysql://', 1)
         SQLALCHEMY_DATABASE_URI = db_url
         IS_SQLITE = False
