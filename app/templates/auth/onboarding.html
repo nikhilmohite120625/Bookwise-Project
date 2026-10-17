@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+
+{% block title %}Reader Personalization Onboarding — BookWise Atelier{% endblock %}
+
+{% block content %}
+<div class="atelier-container" style="max-width: 720px; margin: 3rem auto;">
+  <div class="atelier-card" style="padding: 2.5rem;">
+    
+    <div style="text-align: center; margin-bottom: 2rem;">
+      <span style="font-size: 0.8rem; font-weight: 700; color: var(--color-accent-gold-dark); text-transform: uppercase; letter-spacing: 1.5px;">Curating Your Experience</span>
+      <h2 style="font-family: var(--font-serif); margin-top: 6px; margin-bottom: 8px;">Reader Onboarding Wizard</h2>
+      <p style="color: var(--color-text-secondary); font-size: 0.95rem;">
+        These five preferences fuel our 100-point deterministic recommendation engine. You can update these anytime in your profile.
+      </p>
+    </div>
+
+    <form method="POST" action="{{ url_for('auth.onboarding') }}">
+      {{ form.hidden_tag() }}
+
+      <!-- Step 1: Genres -->
+      <div style="margin-bottom: 2rem; padding-bottom: 1.5rem; border-bottom: 1px solid var(--color-border);">
+        <label class="form-label-atelier" style="font-size: 1.05rem; font-weight: 600; margin-bottom: 4px;">
+          1. Favorite Literary Genres (Max 40 Pts)
+        </label>
+        <p style="font-size: 0.85rem; color: var(--color-text-muted); margin-bottom: 12px;">
+          Hold Ctrl (Windows) or Cmd (Mac) to select multiple genres.
+        </p>
+        {{ form.preferred_genres(class="form-control-atelier", size=6, style="height: auto;") }}
+      </div>
+
+      <!-- Step 2: Languages -->
+      <div style="margin-bottom: 2rem; padding-bottom: 1.5rem; border-bottom: 1px solid var(--color-border);">
+        <label class="form-label-atelier" style="font-size: 1.05rem; font-weight: 600; margin-bottom: 4px;">
+          2. Preferred Languages (Max 20 Pts)
+        </label>
+        <p style="font-size: 0.85rem; color: var(--color-text-muted); margin-bottom: 12px;">
+          Languages you enjoy reading in.
+        </p>
+        {{ form.preferred_languages(class="form-control-atelier", size=4, style="height: auto;") }}
+      </div>
+
+      <!-- Step 3: Age Suitability -->
+      <div style="margin-bottom: 2rem; padding-bottom: 1.5rem; border-bottom: 1px solid var(--color-border);">
+        <label class="form-label-atelier" style="font-size: 1.05rem; font-weight: 600; margin-bottom: 4px;">
+          3. Age Suitability / Target Level (Max 15 Pts)
+        </label>
+        <p style="font-size: 0.85rem; color: var(--color-text-muted); margin-bottom: 12px;">
+          Books will be scored according to this maturity hierarchy.
+        </p>
+        {{ form.age_preference(class="form-control-atelier") }}
+      </div>
+
+      <!-- Step 4: Duration -->
+      <div style="margin-bottom: 2rem; padding-bottom: 1.5rem; border-bottom: 1px solid var(--color-border);">
+        <label class="form-label-atelier" style="font-size: 1.05rem; font-weight: 600; margin-bottom: 4px;">
+          4. Preferred Reading Session Duration (Max 15 Pts)
+        </label>
+        <p style="font-size: 0.85rem; color: var(--color-text-muted); margin-bottom: 12px;">
+          Our mathematical distance formula rewards books tailored to your typical reading window.
+        </p>
+        {{ form.preferred_duration(class="form-control-atelier") }}
+      </div>
+
+      <!-- Step 5: Keywords -->
+      <div style="margin-bottom: 2rem;">
+        <label class="form-label-atelier" style="font-size: 1.05rem; font-weight: 600; margin-bottom: 4px;">
+          5. Themes, Tropes &amp; Interests (Max 10 Pts)
+        </label>
+        <p style="font-size: 0.85rem; color: var(--color-text-muted); margin-bottom: 12px;">
+          Enter topics separated by commas (e.g. <em>magic, stoicism, space, detective, love, psychology</em>).
+        </p>
+        {{ form.interest_keywords(class="form-control-atelier", placeholder="magic, stoicism, space, detective, psychology") }}
+      </div>
+
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 2rem; gap: 16px;">
+        <a href="{{ url_for('auth.skip_onboarding') }}" class="btn-atelier btn-atelier-secondary">
+          Skip for Now
+        </a>
+        <button type="submit" class="btn-atelier btn-atelier-gold" style="padding: 12px 28px;">
+          Save Profile &amp; View Recommendations &rarr;
+        </button>
+      </div>
+
+    </form>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="{{ current_user.preference.theme_preference if current_user.is_authenticated and current_user.preference else 'light' }}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+  <title>{% block title %}BookWise — Find Your Next Favourite Book{% endblock %}</title>
+  
+  <!-- CSS Stylesheets -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/design-system.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/responsive.css') }}">
+  
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+
+  {% block extra_head %}{% endblock %}
+</head>
+<body>
+
+  <!-- Navigation Header -->
+  <header class="atelier-header">
+    <div class="atelier-container">
+      <nav class="atelier-nav">
+        <a href="{{ url_for('main.index') }}" class="atelier-brand">
+          <svg class="atelier-brand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"></path>
+            <path d="M6 6h10"></path>
+            <path d="M6 10h10"></path>
+            <path d="M6 14h6"></path>
+          </svg>
+          <span>BookWise</span>
+        </a>
+
+        <ul class="nav-links">
+          <li><a href="{{ url_for('books.catalogue') }}" class="nav-link">Catalogue</a></li>
+          <li><a href="{{ url_for('discover.index') }}" class="nav-link">Discover</a></li>
+          
+          {% if current_user.is_authenticated %}
+            <li><a href="{{ url_for('recommendations.index') }}" class="nav-link">Recommendations</a></li>
+            <li><a href="{{ url_for('reading.my_books') }}" class="nav-link">My Books</a></li>
+            <li><a href="{{ url_for('timer.index') }}" class="nav-link">Timer</a></li>
+            <li><a href="{{ url_for('calendar.index') }}" class="nav-link">Streaks</a></li>
+            <li><a href="{{ url_for('statistics.index') }}" class="nav-link">Analytics</a></li>
+            <li><a href="{{ url_for('journal.index') }}" class="nav-link">Journal</a></li>
+            <li><a href="{{ url_for('collections.index') }}" class="nav-link">Collections</a></li>
+          {% endif %}
+          
+          <li><a href="{{ url_for('assistant.index') }}" class="nav-link">Assistant</a></li>
+
+          {% if current_user.is_authenticated and current_user.is_admin %}
+            <li><a href="{{ url_for('admin.dashboard') }}" class="nav-link" style="color: var(--color-accent-gold-dark); font-weight: 600;">Admin</a></li>
+          {% endif %}
+        </ul>
+
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <!-- Theme Toggle Button -->
+          <button id="theme-toggle-btn" class="btn-atelier btn-atelier-secondary btn-atelier-sm" type="button" aria-label="Toggle theme">
+            <span id="theme-icon">🌙</span>
+          </button>
+
+          {% if current_user.is_authenticated %}
+            <a href="{{ url_for('auth.profile') }}" class="btn-atelier btn-atelier-secondary btn-atelier-sm">
+              <span>👤 {{ current_user.name.split()[0] }}</span>
+            </a>
+            <a href="{{ url_for('auth.logout') }}" class="btn-atelier btn-atelier-outline btn-atelier-sm">Sign Out</a>
+          {% else %}
+            <a href="{{ url_for('auth.login') }}" class="btn-atelier btn-atelier-secondary btn-atelier-sm">Sign In</a>
+            <a href="{{ url_for('auth.register') }}" class="btn-atelier btn-atelier-gold btn-atelier-sm">Join Atelier</a>
+          {% endif %}
+        </div>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Flash Messages -->
+  <div class="atelier-container" style="margin-top: 1rem;">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert-atelier alert-atelier-{{ category if category != 'error' else 'danger' }}">
+            <span>{{ message }}</span>
+            <button type="button" style="background: none; border: none; cursor: pointer; color: inherit; font-size: 1.1rem;" onclick="this.parentElement.remove()">&times;</button>
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <!-- Incomplete Onboarding Checklist Notice -->
+    {% if current_user.is_authenticated and current_user.preference and not current_user.preference.onboarding_completed %}
+      <div style="background-color: var(--color-gold-bg); border: 1px solid var(--color-border-gold); border-radius: var(--radius-md); padding: 12px 18px; margin-bottom: 1.5rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+        <div>
+          <strong style="color: var(--color-accent-gold-dark);">✨ Complete Your Reader Profile</strong>
+          <div style="font-size: 0.875rem; color: var(--color-text-secondary);">Select your favorite genres, reading pace, and interests to unlock high-precision explainable recommendations.</div>
+        </div>
+        <a href="{{ url_for('auth.onboarding') }}" class="btn-atelier btn-atelier-gold btn-atelier-sm">Complete Profile</a>
+      </div>
+    {% endif %}
+  </div>
+
+  <!-- Main Content Block -->
+  <main class="main-content">
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- Footer Atelier -->
+  <footer class="atelier-footer">
+    <div class="atelier-container">
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 32px;">
+        <div>
+          <div class="atelier-brand" style="color: var(--color-accent-gold); margin-bottom: 12px;">
+            <span>BookWise</span>
+          </div>
+          <p style="font-size: 0.9rem; color: #94a3b8; line-height: 1.6;">
+            The Reading Atelier. A deterministic, explainable digital sanctuary designed to cultivate deep reading habits and guide book discovery.
+          </p>
+          <div style="font-size: 0.85rem; color: #64748b;">
+            Tagline: <em>Find Your Next Favourite Book.</em>
+          </div>
+        </div>
+
+        <div>
+          <h4>Discovery & Reading</h4>
+          <ul style="list-style: none; padding: 0; margin: 0; line-height: 2;">
+            <li><a href="{{ url_for('books.catalogue') }}">Curated Catalogue</a></li>
+            <li><a href="{{ url_for('discover.index') }}">Mood Discovery</a></li>
+            <li><a href="{{ url_for('discover.surprise_me') }}">Surprise Me</a></li>
+            <li><a href="{{ url_for('books.compare') }}">Book Comparison</a></li>
+            <li><a href="{{ url_for('assistant.index') }}">Literary Assistant</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <h4>Atelier Workspace</h4>
+          <ul style="list-style: none; padding: 0; margin: 0; line-height: 2;">
+            <li><a href="{{ url_for('reading.my_books') }}">Reading Shelves</a></li>
+            <li><a href="{{ url_for('timer.index') }}">Reading Stopwatch</a></li>
+            <li><a href="{{ url_for('calendar.index') }}">Habit Streaks & Calendar</a></li>
+            <li><a href="{{ url_for('statistics.index') }}">Goal Analytics</a></li>
+            <li><a href="{{ url_for('journal.index') }}">Private Journal</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <h4>Core Principles</h4>
+          <p style="font-size: 0.85rem; color: #94a3b8; line-height: 1.6;">
+            100% deterministic 5-dimension recommendation engine. Zero opaque black-box algorithms or external APIs. Fully auditable, private, and personal.
+          </p>
+          <div style="margin-top: 12px;">
+            <a href="{{ url_for('main.health') }}" class="btn-atelier btn-atelier-secondary btn-atelier-sm" style="font-size: 0.75rem;">System Health: Active</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <div>&copy; {{ CURRENT_YEAR }} BookWise Atelier. All reading records private and protected.</div>
+        <div>Crafted for passionate readers &amp; lifelong learners.</div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Core JavaScript -->
+  <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+  {% block extra_scripts %}{% endblock %}
+
+</body>
+</html>

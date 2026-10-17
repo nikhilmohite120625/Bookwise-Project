@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+
+{% block title %}Reading Timer &amp; Stopwatch — BookWise Atelier{% endblock %}
+
+{% block content %}
+<div class="atelier-container" style="max-width: 680px; padding-top: 2.5rem;">
+
+  <div style="text-align: center; margin-bottom: 2rem;">
+    <span style="font-size: 0.8rem; font-weight: 700; color: var(--color-accent-gold-dark); text-transform: uppercase; letter-spacing: 1px;">Focus Companion</span>
+    <h1 style="font-family: var(--font-serif); margin-top: 4px; margin-bottom: 6px;">Reading Session Stopwatch</h1>
+    <p style="color: var(--color-text-secondary); margin: 0;">Immerse yourself without distraction. Log your minutes and build your daily reading streak.</p>
+  </div>
+
+  <div class="atelier-card timer-container" style="padding: 3rem 2rem;">
+    
+    <!-- Stopwatch Dial -->
+    <div class="timer-dial">
+      <div id="timer-time" class="timer-time-display">00:00</div>
+      <span style="font-size: 0.8rem; color: var(--color-text-muted); text-transform: uppercase; letter-spacing: 1.5px; margin-top: 4px;">Time Elapsed</span>
+    </div>
+
+    <!-- Stopwatch Controls -->
+    <div style="display: flex; justify-content: center; gap: 14px; margin-bottom: 2rem; flex-wrap: wrap;">
+      <button id="start-btn" type="button" class="btn-atelier btn-atelier-primary" style="padding: 12px 28px; font-size: 1.05rem;">
+        ▶ Start Reading
+      </button>
+
+      <button id="pause-btn" type="button" class="btn-atelier btn-atelier-secondary" style="padding: 12px 28px; font-size: 1.05rem; display: none;">
+        ⏸ Pause
+      </button>
+
+      <button id="finish-btn" type="button" class="btn-atelier btn-atelier-gold" style="padding: 12px 28px; font-size: 1.05rem;">
+        ✓ Finish &amp; Log Session
+      </button>
+
+      <button id="reset-btn" type="button" class="btn-atelier btn-atelier-secondary btn-atelier-sm" style="align-self: center;">
+        Reset
+      </button>
+    </div>
+
+    <div style="font-size: 0.85rem; color: var(--color-text-muted);">
+      💡 Tip: Logging a session of any length automatically updates your daily reading streak!
+    </div>
+  </div>
+
+</div>
+
+<!-- Modal: Log Session Details -->
+<div id="log-session-modal" class="atelier-modal-backdrop">
+  <div class="atelier-modal">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+      <h3 style="margin: 0;">Log Reading Session</h3>
+      <button type="button" data-modal-close style="background: none; border: none; font-size: 1.5rem; cursor: pointer;">&times;</button>
+    </div>
+
+    <form method="POST" action="{{ url_for('timer.save_session') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="duration_seconds" id="duration-seconds-input" value="0">
+      <input type="hidden" name="idempotency_token" id="idempotency-token-input" value="">
+
+      <div class="form-group-atelier">
+        <label class="form-label-atelier">Associated Book (Optional)</label>
+        <select name="book_id" class="form-control-atelier">
+          <option value="">— General Reading Session (No Book Specified) —</option>
+          {% for rec in currently_reading %}
+            {% set b = rec.book %}
+            <option value="{{ b.id }}" {% if selected_book_id == b.id %}selected{% endif %}>
+              {{ b.title }} (Currently at page {{ rec.pages_read }})
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="form-group-atelier">
+        <label class="form-label-atelier">Pages Read During This Session (Optional)</label>
+        <input type="number" name="pages_read" min="0" placeholder="e.g. 25" class="form-control-atelier">
+      </div>
+
+      <div class="form-group-atelier">
+        <label class="form-label-atelier">Session Notes / Insights (Optional)</label>
+        <textarea name="notes" rows="3" class="form-control-atelier" placeholder="What stood out to you during this reading session?"></textarea>
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 1.5rem;">
+        <button type="button" data-modal-close class="btn-atelier btn-atelier-secondary">Keep Reading</button>
+        <button type="submit" class="btn-atelier btn-atelier-gold">Confirm &amp; Record</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{{ url_for('static', filename='js/timer.js') }}"></script>
+{% endblock %}

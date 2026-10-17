@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block title %}{{ collection.name }} — BookWise Atelier{% endblock %}
+
+{% block content %}
+<div class="atelier-container" style="padding-top: 2rem;">
+
+  <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2rem; border-bottom: 1px solid var(--color-border); padding-bottom: 1rem; flex-wrap: wrap; gap: 16px;">
+    <div>
+      <a href="{{ url_for('collections.index') }}" style="font-size: 0.85rem; color: var(--color-text-muted);">&larr; Back to Collections</a>
+      <h1 style="font-family: var(--font-serif); margin-top: 4px; margin-bottom: 6px;">{{ collection.name }}</h1>
+      {% if collection.description %}
+        <p style="color: var(--color-text-secondary); margin: 0;">{{ collection.description }}</p>
+      {% endif %}
+    </div>
+
+    <!-- Add Book to Collection Form -->
+    <form method="POST" action="{{ url_for('collections.add_book', collection_id=collection.id) }}" style="display: flex; gap: 8px;">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <select name="book_id" class="form-control-atelier" style="font-size: 0.85rem; width: auto;" required>
+        <option value="">— Add a Book to Collection —</option>
+        {% for b in all_books %}
+          <option value="{{ b.id }}">{{ b.title }} ({{ b.author }})</option>
+        {% endfor %}
+      </select>
+      <button type="submit" class="btn-atelier btn-atelier-gold btn-atelier-sm">+ Add</button>
+    </form>
+  </div>
+
+  {% set items = collection.items.all() %}
+  {% if items %}
+    <div class="books-grid">
+      {% for item in items %}
+        {% set b = item.book %}
+        <div class="book-card">
+          <a href="{{ url_for('books.detail', book_id=b.id) }}" class="book-cover-container">
+            <img src="{{ b.cover_url or b.get_fallback_svg() }}" alt="{{ b.title }}" class="book-cover-img" data-fallback="{{ b.get_fallback_svg() }}">
+          </a>
+          <div class="book-info">
+            <a href="{{ url_for('books.detail', book_id=b.id) }}">
+              <div class="book-title">{{ b.title }}</div>
+            </a>
+            <div class="book-author">by {{ b.author }}</div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: auto; padding-top: 10px; border-top: 1px dashed var(--color-border);">
+              <span style="font-size: 0.75rem; color: var(--color-text-muted);">Position #{{ item.position }}</span>
+              <form method="POST" action="{{ url_for('collections.remove_book', collection_id=collection.id, book_id=b.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn-atelier btn-atelier-secondary btn-atelier-sm" style="color: var(--color-danger); font-size: 0.75rem;">
+                  Remove
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="atelier-card empty-state">
+      <div class="empty-state-icon">📖</div>
+      <h3>This Collection is Empty</h3>
+      <p>Use the dropdown menu above to select and add books to this collection.</p>
+    </div>
+  {% endif %}
+
+</div>
+{% endblock %}

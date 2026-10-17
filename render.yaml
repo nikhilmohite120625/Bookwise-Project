@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: bookwise-atelier
+    env: python
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "gunicorn run:app"
+    healthCheckPath: /health
+    plan: standard
+    envVars:
+      - key: FLASK_ENV
+        value: production
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DATABASE_URL
+        fromDatabase:
+          name: bookwise-mysql
+          property: connectionString
+      - key: RATELIMIT_STORAGE_URI
+        value: memory://
+
+databases:
+  - name: bookwise-mysql
+    databaseName: bookwise_db
+    user: bookwise_user
+    plan: standard

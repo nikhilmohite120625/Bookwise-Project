@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+
+{% block title %}Reader Profile &amp; Atelier Settings — BookWise{% endblock %}
+
+{% block content %}
+<div class="atelier-container" style="max-width: 860px; margin: 2.5rem auto;">
+
+  <div style="margin-bottom: 2rem;">
+    <h1 style="font-family: var(--font-serif); margin-bottom: 6px;">Reader Profile &amp; Preferences</h1>
+    <p style="color: var(--color-text-secondary); margin: 0;">Adjust your recommendation calibration, change security credentials, and manage your account.</p>
+  </div>
+
+  <!-- Preferences Section -->
+  <div class="atelier-card" style="margin-bottom: 2.5rem;">
+    <h3 style="margin-bottom: 1.5rem; border-bottom: 1px solid var(--color-border); padding-bottom: 0.75rem;">
+      Recommendation Engine Calibration
+    </h3>
+
+    <form method="POST" action="{{ url_for('auth.profile') }}">
+      {{ pref_form.hidden_tag() }}
+
+      <div class="form-group-atelier">
+        {{ pref_form.name.label(class="form-label-atelier") }}
+        {{ pref_form.name(class="form-control-atelier") }}
+        {% for error in pref_form.name.errors %}
+          <div style="color: var(--color-danger); font-size: 0.8rem;">{{ error }}</div>
+        {% endfor %}
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+        <div class="form-group-atelier">
+          {{ pref_form.preferred_genres.label(class="form-label-atelier") }}
+          {{ pref_form.preferred_genres(class="form-control-atelier", size=6, style="height: auto;") }}
+          <small style="color: var(--color-text-muted);">Hold Ctrl/Cmd to multi-select</small>
+        </div>
+
+        <div class="form-group-atelier">
+          {{ pref_form.preferred_languages.label(class="form-label-atelier") }}
+          {{ pref_form.preferred_languages(class="form-control-atelier", size=6, style="height: auto;") }}
+          <small style="color: var(--color-text-muted);">Hold Ctrl/Cmd to multi-select</small>
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px;">
+        <div class="form-group-atelier">
+          {{ pref_form.age_preference.label(class="form-label-atelier") }}
+          {{ pref_form.age_preference(class="form-control-atelier") }}
+        </div>
+
+        <div class="form-group-atelier">
+          {{ pref_form.preferred_duration.label(class="form-label-atelier") }}
+          {{ pref_form.preferred_duration(class="form-control-atelier") }}
+        </div>
+
+        <div class="form-group-atelier">
+          {{ pref_form.theme_preference.label(class="form-label-atelier") }}
+          {{ pref_form.theme_preference(class="form-control-atelier") }}
+        </div>
+      </div>
+
+      <div class="form-group-atelier">
+        {{ pref_form.interest_keywords.label(class="form-label-atelier") }}
+        {{ pref_form.interest_keywords(class="form-control-atelier", placeholder="comma, separated, interest, keywords") }}
+      </div>
+
+      <button type="submit" name="pref_submit" value="1" class="btn-atelier btn-atelier-primary" style="margin-top: 1rem;">
+        Save Preferences
+      </button>
+    </form>
+  </div>
+
+  <!-- Security / Password Change Section -->
+  <div class="atelier-card" style="margin-bottom: 2.5rem;">
+    <h3 style="margin-bottom: 1.5rem; border-bottom: 1px solid var(--color-border); padding-bottom: 0.75rem;">
+      Security &amp; Password
+    </h3>
+
+    <form method="POST" action="{{ url_for('auth.profile') }}">
+      {{ pwd_form.hidden_tag() }}
+
+      <div class="form-group-atelier">
+        {{ pwd_form.current_password.label(class="form-label-atelier") }}
+        {{ pwd_form.current_password(class="form-control-atelier") }}
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+        <div class="form-group-atelier">
+          {{ pwd_form.new_password.label(class="form-label-atelier") }}
+          {{ pwd_form.new_password(class="form-control-atelier") }}
+        </div>
+        <div class="form-group-atelier">
+          {{ pwd_form.confirm_new_password.label(class="form-label-atelier") }}
+          {{ pwd_form.confirm_new_password(class="form-control-atelier") }}
+        </div>
+      </div>
+
+      <button type="submit" name="pwd_submit" value="1" class="btn-atelier btn-atelier-secondary">
+        Update Password
+      </button>
+    </form>
+  </div>
+
+  <!-- Danger Zone / Delete Account -->
+  <div class="atelier-card" style="border-color: rgba(156, 39, 39, 0.4); background: rgba(156, 39, 39, 0.02);">
+    <h3 style="color: var(--color-danger); margin-bottom: 0.75rem;">Danger Zone: Delete Account</h3>
+    <p style="color: var(--color-text-secondary); font-size: 0.9rem; margin-bottom: 1.5rem;">
+      Permanently delete your account, personal reading shelves, reading timer history, streak records, journal entries, and personal collections. This action cannot be undone.
+    </p>
+
+    <form method="POST" action="{{ url_for('auth.delete_account') }}" onsubmit="return confirm('Are you completely sure you want to permanently delete your BookWise account? All reading records will be erased.');">
+      {{ del_form.hidden_tag() }}
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 1rem;">
+        <div class="form-group-atelier">
+          {{ del_form.confirm_email.label(class="form-label-atelier") }}
+          {{ del_form.confirm_email(class="form-control-atelier", placeholder=current_user.email) }}
+        </div>
+        <div class="form-group-atelier">
+          {{ del_form.password.label(class="form-label-atelier") }}
+          {{ del_form.password(class="form-control-atelier", placeholder="Current Password") }}
+        </div>
+      </div>
+
+      <button type="submit" class="btn-atelier btn-atelier-danger">
+        Permanently Delete My Account
+      </button>
+    </form>
+  </div>
+
+</div>
+{% endblock %}

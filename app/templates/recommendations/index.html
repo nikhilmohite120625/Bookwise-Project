@@ -1,0 +1,188 @@
+{% extends "base.html" %}
+
+{% block title %}Explainable Recommendations — BookWise Atelier{% endblock %}
+
+{% block content %}
+<div class="atelier-container" style="padding-top: 2rem;">
+
+  <!-- Header Banner -->
+  <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2rem; border-bottom: 1px solid var(--color-border); padding-bottom: 1rem; flex-wrap: wrap; gap: 16px;">
+    <div>
+      <span style="font-size: 0.8rem; font-weight: 700; color: var(--color-accent-gold-dark); text-transform: uppercase; letter-spacing: 1px;">Auditable Scoring Engine</span>
+      <h1 style="font-family: var(--font-serif); margin-top: 4px; margin-bottom: 6px;">Explainable Book Recommendations</h1>
+      <p style="color: var(--color-text-secondary); margin: 0;">Ranked deterministically across 5 dimensions against your reader profile.</p>
+    </div>
+
+    <!-- Toggles -->
+    <div style="display: flex; align-items: center; gap: 12px; background: var(--color-bg-card); padding: 8px 14px; border-radius: var(--radius-md); border: 1px solid var(--color-border);">
+      <span style="font-size: 0.85rem; color: var(--color-text-secondary);">Include Wishlist:</span>
+      {% if include_wishlist %}
+        <a href="{{ url_for('recommendations.index', wishlist='false') }}" class="btn-atelier btn-atelier-primary btn-atelier-sm">Yes</a>
+      {% else %}
+        <a href="{{ url_for('recommendations.index', wishlist='true') }}" class="btn-atelier btn-atelier-secondary btn-atelier-sm">No</a>
+      {% endif %}
+
+      <a href="{{ url_for('auth.profile') }}" class="btn-atelier btn-atelier-outline btn-atelier-sm" style="margin-left: 8px;">
+        ⚙️ Tune Calibration
+      </a>
+    </div>
+  </div>
+
+  <!-- Incomplete Profile Banner if needed -->
+  {% if is_onboarding_needed %}
+    <div class="atelier-card" style="background-color: var(--color-gold-bg); border-color: var(--color-border-gold); margin-bottom: 2.5rem; text-align: center; padding: 2rem;">
+      <h3 style="margin-bottom: 8px; color: var(--color-accent-gold-dark);">✨ Your Profile Needs Calibration</h3>
+      <p style="color: var(--color-text-secondary); max-width: 600px; margin: 0 auto 1.5rem;">
+        You haven't configured your genre or interest preferences yet. Complete your reading profile to get accurate, 100-point personalized recommendations.
+      </p>
+      <a href="{{ url_for('auth.onboarding') }}" class="btn-atelier btn-atelier-gold">Configure Reader Preferences &rarr;</a>
+    </div>
+  {% endif %}
+
+  <!-- Recommendations List / Grid -->
+  {% if recommendations %}
+    <div class="recommendations-grid">
+      {% for rec in recommendations %}
+        {% set book = rec.book %}
+        <div class="atelier-card" style="display: flex; flex-direction: column; justify-content: space-between; padding: 1.25rem;">
+          
+          <div>
+            <div style="display: flex; gap: 16px; margin-bottom: 14px;">
+              <!-- Book Cover -->
+              <a href="{{ url_for('books.detail', book_id=book.id) }}" style="flex-shrink: 0; width: 85px; height: 125px; border-radius: 6px; overflow: hidden; box-shadow: var(--shadow-sm); border: 1px solid var(--color-border);">
+                <img src="{{ book.cover_url or book.get_fallback_svg() }}" alt="{{ book.title }}" style="width: 100%; height: 100%; object-fit: cover;" data-fallback="{{ book.get_fallback_svg() }}" class="book-cover-img">
+              </a>
+
+              <!-- Book Header & Score -->
+              <div style="flex-grow: 1;">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 8px;">
+                  <span class="score-badge {% if rec.total_score >= 70 %}score-badge-high{% elif rec.total_score >= 40 %}score-badge-med{% else %}score-badge-low{% endif %}">
+                    {{ rec.display_score }}% Match
+                  </span>
+                  <span style="font-size: 0.8rem; color: var(--color-text-muted);">⭐ {{ book.rating }}</span>
+                </div>
+
+                <a href="{{ url_for('books.detail', book_id=book.id) }}">
+                  <h4 style="font-size: 1.05rem; margin: 6px 0 2px; line-height: 1.3;">{{ book.title }}</h4>
+                </a>
+                <div style="font-size: 0.825rem; color: var(--color-text-secondary); font-style: italic; margin-bottom: 6px;">
+                  by {{ book.author }}
+                </div>
+
+                <div style="font-size: 0.78rem; color: var(--color-text-muted);">
+                  {{ book.genres_list[:2]|join(', ') }} • ⏱️ {{ book.estimated_duration or 30 }}m
+                </div>
+              </div>
+            </div>
+
+            <!-- Primary Highlight Rationale -->
+            <div style="background-color: var(--color-bg-subtle); border-radius: var(--radius-sm); padding: 8px 12px; font-size: 0.82rem; margin-bottom: 12px; color: var(--color-text-main);">
+              <strong>Why Recommended:</strong> {{ rec.reasons[0] if rec.reasons else 'General catalogue match' }}
+            </div>
+
+            <!-- Expandable Detailed Breakdown Button -->
+            <button type="button" class="btn-atelier btn-atelier-secondary btn-atelier-sm toggle-breakdown-btn" data-target="breakdown-{{ book.id }}" style="width: 100%; font-size: 0.8rem; padding: 6px;">
+              Why this book? (Score Breakdown) ▼
+            </button>
+
+            <!-- Detailed Breakdown Accordion Panel -->
+            <div id="breakdown-{{ book.id }}" class="breakdown-card" style="display: none;">
+              <div style="font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--color-accent-gold-dark); margin-bottom: 8px;">
+                5-Dimension Score Breakdown
+              </div>
+
+              <div class="dimension-row">
+                <span>Genre (Max 40)</span>
+                <div class="dimension-bar-track">
+                  <div class="dimension-bar-fill" style="width: {{ (rec.genre_score / 40.0) * 100 }}%;"></div>
+                </div>
+                <strong>{{ rec.genre_score }}</strong>
+              </div>
+
+              <div class="dimension-row">
+                <span>Language (Max 20)</span>
+                <div class="dimension-bar-track">
+                  <div class="dimension-bar-fill" style="width: {{ (rec.language_score / 20.0) * 100 }}%;"></div>
+                </div>
+                <strong>{{ rec.language_score }}</strong>
+              </div>
+
+              <div class="dimension-row">
+                <span>Suitability (Max 15)</span>
+                <div class="dimension-bar-track">
+                  <div class="dimension-bar-fill" style="width: {{ (rec.age_score / 15.0) * 100 }}%;"></div>
+                </div>
+                <strong>{{ rec.age_score }}</strong>
+              </div>
+
+              <div class="dimension-row">
+                <span>Duration (Max 15)</span>
+                <div class="dimension-bar-track">
+                  <div class="dimension-bar-fill" style="width: {{ (rec.duration_score / 15.0) * 100 }}%;"></div>
+                </div>
+                <strong>{{ rec.duration_score }}</strong>
+              </div>
+
+              <div class="dimension-row">
+                <span>Keywords (Max 10)</span>
+                <div class="dimension-bar-track">
+                  <div class="dimension-bar-fill" style="width: {{ (rec.interest_score / 10.0) * 100 }}%;"></div>
+                </div>
+                <strong>{{ rec.interest_score }}</strong>
+              </div>
+
+              <!-- Matched / Unmatched Keywords -->
+              {% if rec.matched_keywords %}
+                <div style="margin-top: 8px; font-size: 0.78rem;">
+                  <strong style="color: var(--color-success);">Matched Interests:</strong> {{ rec.matched_keywords|join(', ') }}
+                </div>
+              {% endif %}
+
+              <!-- Full Reasons -->
+              <div style="margin-top: 8px; border-top: 1px dashed var(--color-border); padding-top: 6px; font-size: 0.75rem; color: var(--color-text-secondary); line-height: 1.4;">
+                {% for r in rec.reasons %}
+                  <div>• {{ r }}</div>
+                {% endfor %}
+              </div>
+            </div>
+          </div>
+
+          <!-- Bottom Shelf Action Buttons -->
+          <div style="display: flex; gap: 8px; margin-top: 14px; border-top: 1px solid var(--color-border); padding-top: 10px;">
+            <form method="POST" action="{{ url_for('reading.set_status') }}" style="flex: 1;">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <input type="hidden" name="book_id" value="{{ book.id }}">
+              <input type="hidden" name="status" value="want_to_read">
+              <button type="submit" class="btn-atelier btn-atelier-primary btn-atelier-sm" style="width: 100%;">
+                + Want to Read
+              </button>
+            </form>
+
+            <form method="POST" action="{{ url_for('reading.set_status') }}">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <input type="hidden" name="book_id" value="{{ book.id }}">
+              <input type="hidden" name="status" value="currently_reading">
+              <button type="submit" class="btn-atelier btn-atelier-gold btn-atelier-sm" title="Start Reading Now">
+                📖 Read
+              </button>
+            </form>
+          </div>
+
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="atelier-card empty-state">
+      <div class="empty-state-icon">✨</div>
+      <h3>No Recommendations Remaining</h3>
+      <p>You have completed or shelved all eligible books in the catalogue.</p>
+      <a href="{{ url_for('books.catalogue') }}" class="btn-atelier btn-atelier-gold btn-atelier-sm">Explore Catalogue</a>
+    </div>
+  {% endif %}
+
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{{ url_for('static', filename='js/recommendations.js') }}"></script>
+{% endblock %}

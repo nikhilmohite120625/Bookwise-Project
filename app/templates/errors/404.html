@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block title %}Page Not Found (404) — BookWise Atelier{% endblock %}
+
+{% block content %}
+<div class="atelier-container" style="max-width: 600px; padding: 5rem 0; text-align: center;">
+  <div class="atelier-card empty-state" style="padding: 3rem 2rem;">
+    <div class="empty-state-icon">📖</div>
+    <h1 style="font-family: var(--font-serif); font-size: 2.2rem; margin-bottom: 8px;">Volume Not Found</h1>
+    <p style="color: var(--color-text-secondary); margin-bottom: 2rem;">
+      The page or literary archive you sought could not be discovered within the Atelier catalogue.
+    </p>
+    <div style="display: flex; justify-content: center; gap: 12px;">
+      <a href="{{ url_for('main.index') }}" class="btn-atelier btn-atelier-primary">Return Home</a>
+      <a href="{{ url_for('books.catalogue') }}" class="btn-atelier btn-atelier-gold">Browse Catalogue</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

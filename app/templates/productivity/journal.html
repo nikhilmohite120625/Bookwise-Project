@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+
+{% block title %}Reading Journal — BookWise Atelier{% endblock %}
+
+{% block content %}
+<div class="atelier-container" style="max-width: 860px; padding-top: 2rem;">
+
+  <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2rem; border-bottom: 1px solid var(--color-border); padding-bottom: 1rem;">
+    <div>
+      <span style="font-size: 0.8rem; font-weight: 700; color: var(--color-accent-gold-dark); text-transform: uppercase; letter-spacing: 1px;">Personal Reflections</span>
+      <h1 style="font-family: var(--font-serif); margin-top: 4px; margin-bottom: 6px;">Reading Journal</h1>
+      <p style="color: var(--color-text-secondary); margin: 0;">Record quotes, chapter reflections, and insights from your reading sessions.</p>
+    </div>
+  </div>
+
+  <!-- Create Entry Form Card -->
+  <div class="atelier-card" style="margin-bottom: 2.5rem; padding: 1.75rem;">
+    <h3 style="margin-bottom: 1.25rem;">New Reflection</h3>
+
+    <form method="POST" action="{{ url_for('journal.index') }}">
+      {{ form.hidden_tag() }}
+
+      <div class="form-group-atelier">
+        {{ form.title.label(class="form-label-atelier") }}
+        {{ form.title(class="form-control-atelier", placeholder="e.g. Reflections on Marcus Aurelius's View of Adversity") }}
+        {% for error in form.title.errors %}
+          <div style="color: var(--color-danger); font-size: 0.8rem;">{{ error }}</div>
+        {% endfor %}
+      </div>
+
+      <div class="form-group-atelier">
+        {{ form.book_id.label(class="form-label-atelier") }}
+        {{ form.book_id(class="form-control-atelier") }}
+      </div>
+
+      <div class="form-group-atelier">
+        {{ form.content.label(class="form-label-atelier") }}
+        {{ form.content(class="form-control-atelier", rows=4, placeholder="Write your thoughts, favorite quotes, or philosophical takeaways...") }}
+        {% for error in form.content.errors %}
+          <div style="color: var(--color-danger); font-size: 0.8rem;">{{ error }}</div>
+        {% endfor %}
+      </div>
+
+      <button type="submit" class="btn-atelier btn-atelier-primary">
+        Save Reflection
+      </button>
+    </form>
+  </div>
+
+  <!-- Entries List -->
+  {% if entries %}
+    <div style="display: flex; flex-direction: column; gap: 20px;">
+      {% for entry in entries %}
+        <div class="atelier-card" style="padding: 1.5rem;">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+            <div>
+              <h3 style="margin: 0 0 4px; font-size: 1.25rem;">{{ entry.title }}</h3>
+              <div style="font-size: 0.85rem; color: var(--color-text-muted);">
+                {% if entry.book %}
+                  <span>📖 Linked to: <strong>{{ entry.book.title }}</strong> by {{ entry.book.author }}</span> •
+                {% endif %}
+                <span>{{ entry.created_at.strftime('%B %d, %Y at %H:%M') }}</span>
+              </div>
+            </div>
+
+            <form method="POST" action="{{ url_for('journal.delete', entry_id=entry.id) }}" onsubmit="return confirm('Delete this journal entry?');">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="submit" class="btn-atelier btn-atelier-secondary btn-atelier-sm" style="color: var(--color-danger);">
+                Delete
+              </button>
+            </form>
+          </div>
+
+          <div style="font-size: 0.95rem; line-height: 1.6; color: var(--color-text-main); white-space: pre-wrap; margin-top: 10px; border-top: 1px dashed var(--color-border); padding-top: 10px;">
+            {{ entry.content }}
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="atelier-card empty-state">
+      <div class="empty-state-icon">✒️</div>
+      <h3>Your Journal is Awaiting Your First Entry</h3>
+      <p>Use the form above to record your thoughts, reactions, and favorite passages.</p>
+    </div>
+  {% endif %}
+
+</div>
+{% endblock %}

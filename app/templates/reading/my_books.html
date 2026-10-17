@@ -1,0 +1,269 @@
+{% extends "base.html" %}
+
+{% block title %}My Books — BookWise Atelier{% endblock %}
+
+{% block content %}
+<div class="atelier-container" style="padding-top: 2rem;">
+
+  <!-- Dashboard Stats Header Cards -->
+  <div class="stats-overview-grid">
+    <div class="atelier-card" style="padding: 1.25rem;">
+      <div style="font-size: 0.8rem; color: var(--color-text-muted); text-transform: uppercase; letter-spacing: 0.5px;">Currently Reading</div>
+      <div style="font-size: 2rem; font-weight: 700; color: var(--color-primary); margin-top: 4px;">
+        {{ stats_summary.shelf_counts.currently_reading }}
+      </div>
+    </div>
+
+    <div class="atelier-card" style="padding: 1.25rem;">
+      <div style="font-size: 0.8rem; color: var(--color-text-muted); text-transform: uppercase; letter-spacing: 0.5px;">Want to Read</div>
+      <div style="font-size: 2rem; font-weight: 700; color: var(--color-accent-gold-dark); margin-top: 4px;">
+        {{ stats_summary.shelf_counts.want_to_read }}
+      </div>
+    </div>
+
+    <div class="atelier-card" style="padding: 1.25rem;">
+      <div style="font-size: 0.8rem; color: var(--color-text-muted); text-transform: uppercase; letter-spacing: 0.5px;">Completed Books</div>
+      <div style="font-size: 2rem; font-weight: 700; color: var(--color-success); margin-top: 4px;">
+        {{ stats_summary.shelf_counts.completed }}
+      </div>
+    </div>
+
+    <div class="atelier-card" style="padding: 1.25rem;">
+      <div style="font-size: 0.8rem; color: var(--color-text-muted); text-transform: uppercase; letter-spacing: 0.5px;">Reading Streak</div>
+      <div style="font-size: 2rem; font-weight: 700; color: #ea580c; margin-top: 4px;">
+        {{ stats_summary.streaks.current_streak }} Days 🔥
+      </div>
+    </div>
+  </div>
+
+  <!-- Shelf Tabs Navigation -->
+  <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--color-border); margin-bottom: 2rem; flex-wrap: wrap; gap: 12px;">
+    <div style="display: flex; gap: 8px;">
+      <a href="{{ url_for('reading.my_books', shelf='currently_reading') }}" class="btn-atelier {% if active_tab == 'currently_reading' %}btn-atelier-primary{% else %}btn-atelier-secondary{% endif %}" style="border-radius: 8px 8px 0 0; border-bottom: none;">
+        📖 Currently Reading ({{ currently_reading|length }})
+      </a>
+      <a href="{{ url_for('reading.my_books', shelf='want_to_read') }}" class="btn-atelier {% if active_tab == 'want_to_read' %}btn-atelier-primary{% else %}btn-atelier-secondary{% endif %}" style="border-radius: 8px 8px 0 0; border-bottom: none;">
+        📚 Want to Read ({{ want_to_read|length }})
+      </a>
+      <a href="{{ url_for('reading.my_books', shelf='completed') }}" class="btn-atelier {% if active_tab == 'completed' %}btn-atelier-primary{% else %}btn-atelier-secondary{% endif %}" style="border-radius: 8px 8px 0 0; border-bottom: none;">
+        ✨ Completed ({{ completed|length }})
+      </a>
+    </div>
+
+    <div style="display: flex; gap: 10px;">
+      <a href="{{ url_for('reading.queue') }}" class="btn-atelier btn-atelier-secondary btn-atelier-sm">
+        Priority Queue
+      </a>
+      <a href="{{ url_for('reading.wishlist') }}" class="btn-atelier btn-atelier-secondary btn-atelier-sm">
+        Wishlist
+      </a>
+      <a href="{{ url_for('books.catalogue') }}" class="btn-atelier btn-atelier-gold btn-atelier-sm">
+        + Add New Book
+      </a>
+    </div>
+  </div>
+
+  <!-- Active Tab Content -->
+  {% if active_tab == 'currently_reading' %}
+    <!-- Currently Reading Shelf -->
+    {% if currently_reading %}
+      <div style="display: flex; flex-direction: column; gap: 20px;">
+        {% for rec in currently_reading %}
+          {% set b = rec.book %}
+          <div class="atelier-card" style="display: flex; gap: 24px; align-items: center; flex-wrap: wrap;">
+            
+            <a href="{{ url_for('books.detail', book_id=b.id) }}" style="flex-shrink: 0; width: 100px; height: 145px; border-radius: 6px; overflow: hidden; box-shadow: var(--shadow-sm);">
+              <img src="{{ b.cover_url or b.get_fallback_svg() }}" alt="{{ b.title }}" style="width: 100%; height: 100%; object-fit: cover;" data-fallback="{{ b.get_fallback_svg() }}" class="book-cover-img">
+            </a>
+
+            <div style="flex-grow: 1; min-width: 260px;">
+              <a href="{{ url_for('books.detail', book_id=b.id) }}">
+                <h3 style="margin-bottom: 4px; font-size: 1.35rem;">{{ b.title }}</h3>
+              </a>
+              <div style="font-size: 0.95rem; color: var(--color-text-secondary); font-style: italic; margin-bottom: 12px;">
+                by {{ b.author }}
+              </div>
+
+              <!-- Progress Bar -->
+              <div style="max-width: 480px;">
+                <div style="display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 4px;">
+                  <span>Page <strong>{{ rec.pages_read }}</strong> of <strong>{{ rec.total_pages or b.page_count or 'N/A' }}</strong></span>
+                  <strong>{{ rec.progress_percent }}%</strong>
+                </div>
+                <div class="reading-progress-track">
+                  <div class="reading-progress-fill" style="width: {{ rec.progress_percent }}%;"></div>
+                </div>
+              </div>
+
+              {% if rec.notes %}
+                <div style="font-size: 0.85rem; color: var(--color-text-secondary); margin-top: 8px; font-style: italic;">
+                  "{{ rec.notes }}"
+                </div>
+              {% endif %}
+            </div>
+
+            <!-- Actions -->
+            <div style="display: flex; flex-direction: column; gap: 8px; align-items: flex-end;">
+              <a href="{{ url_for('timer.index', book_id=b.id) }}" class="btn-atelier btn-atelier-primary btn-atelier-sm" style="width: 150px;">
+                ⏱️ Start Timer
+              </a>
+
+              <button type="button" class="btn-atelier btn-atelier-gold btn-atelier-sm" style="width: 150px;" onclick="openProgressModal({{ b.id }}, '{{ b.title|replace('\'', '\\\'') }}', {{ rec.pages_read }}, {{ rec.total_pages or b.page_count or 100 }})">
+                Update Page
+              </button>
+
+              <form method="POST" action="{{ url_for('reading.set_status') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="book_id" value="{{ b.id }}">
+                <input type="hidden" name="status" value="completed">
+                <button type="submit" class="btn-atelier btn-atelier-outline btn-atelier-sm" style="width: 150px;">
+                  Mark Completed
+                </button>
+              </form>
+            </div>
+
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="atelier-card empty-state">
+        <div class="empty-state-icon">📖</div>
+        <h3>No Books Currently in Progress</h3>
+        <p>Pick a volume from your Want to Read shelf or discover a new recommendation.</p>
+        <a href="{{ url_for('recommendations.index') }}" class="btn-atelier btn-atelier-gold btn-atelier-sm">Explore Recommendations</a>
+      </div>
+    {% endif %}
+
+  {% elif active_tab == 'want_to_read' %}
+    <!-- Want to Read Shelf -->
+    {% if want_to_read %}
+      <div class="books-grid">
+        {% for rec in want_to_read %}
+          {% set b = rec.book %}
+          <div class="book-card">
+            <a href="{{ url_for('books.detail', book_id=b.id) }}" class="book-cover-container">
+              <img src="{{ b.cover_url or b.get_fallback_svg() }}" alt="{{ b.title }}" class="book-cover-img" data-fallback="{{ b.get_fallback_svg() }}">
+            </a>
+            <div class="book-info">
+              <a href="{{ url_for('books.detail', book_id=b.id) }}">
+                <div class="book-title">{{ b.title }}</div>
+              </a>
+              <div class="book-author">by {{ b.author }}</div>
+              
+              <div style="display: flex; gap: 6px; margin-top: auto; padding-top: 10px;">
+                <form method="POST" action="{{ url_for('reading.set_status') }}" style="flex: 1;">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <input type="hidden" name="book_id" value="{{ b.id }}">
+                  <input type="hidden" name="status" value="currently_reading">
+                  <button type="submit" class="btn-atelier btn-atelier-primary btn-atelier-sm" style="width: 100%;">
+                    Start Reading
+                  </button>
+                </form>
+
+                <form method="POST" action="{{ url_for('reading.remove_book') }}">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <input type="hidden" name="book_id" value="{{ b.id }}">
+                  <button type="submit" class="btn-atelier btn-atelier-secondary btn-atelier-sm" title="Remove from shelf">
+                    &times;
+                  </button>
+                </form>
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="atelier-card empty-state">
+        <div class="empty-state-icon">📚</div>
+        <h3>Your Reading Queue is Empty</h3>
+        <p>Save books to your Want to Read shelf to build your reading queue.</p>
+        <a href="{{ url_for('books.catalogue') }}" class="btn-atelier btn-atelier-primary btn-atelier-sm">Browse Catalogue</a>
+      </div>
+    {% endif %}
+
+  {% elif active_tab == 'completed' %}
+    <!-- Completed Shelf -->
+    {% if completed %}
+      <div class="books-grid">
+        {% for rec in completed %}
+          {% set b = rec.book %}
+          <div class="book-card">
+            <a href="{{ url_for('books.detail', book_id=b.id) }}" class="book-cover-container">
+              <img src="{{ b.cover_url or b.get_fallback_svg() }}" alt="{{ b.title }}" class="book-cover-img" data-fallback="{{ b.get_fallback_svg() }}">
+              <div class="book-badge-overlay">
+                <span class="score-badge score-badge-high">Completed</span>
+              </div>
+            </a>
+            <div class="book-info">
+              <a href="{{ url_for('books.detail', book_id=b.id) }}">
+                <div class="book-title">{{ b.title }}</div>
+              </a>
+              <div class="book-author">by {{ b.author }}</div>
+              
+              <div style="font-size: 0.8rem; color: var(--color-text-muted); margin-top: auto; padding-top: 8px;">
+                {% if rec.completed_at %}
+                  Finished: {{ rec.completed_at.strftime('%b %d, %Y') }}
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="atelier-card empty-state">
+        <div class="empty-state-icon">✨</div>
+        <h3>No Completed Books Yet</h3>
+        <p>When you finish a title, it will be celebrated here and counted towards your annual reading goal.</p>
+      </div>
+    {% endif %}
+  {% endif %}
+
+</div>
+
+<!-- Modal: Quick Log Progress -->
+<div id="quick-progress-modal" class="atelier-modal-backdrop">
+  <div class="atelier-modal">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+      <h3 style="margin: 0;" id="modal-book-title">Log Reading Progress</h3>
+      <button type="button" data-modal-close style="background: none; border: none; font-size: 1.5rem; cursor: pointer;">&times;</button>
+    </div>
+
+    <form method="POST" action="{{ url_for('reading.update_progress') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="book_id" id="modal-book-id">
+      <input type="hidden" name="next" value="{{ request.url }}">
+
+      <div class="form-group-atelier">
+        <label class="form-label-atelier">Page Reached</label>
+        <input type="number" name="pages_read" id="modal-pages-read" min="0" class="form-control-atelier" required>
+        <small style="color: var(--color-text-muted);" id="modal-total-pages-label"></small>
+      </div>
+
+      <div class="form-group-atelier">
+        <label class="form-label-atelier">Reading Notes / Quotes</label>
+        <textarea name="notes" rows="3" class="form-control-atelier" placeholder="Add chapter takeaways or reflections..."></textarea>
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 1.5rem;">
+        <button type="button" data-modal-close class="btn-atelier btn-atelier-secondary">Cancel</button>
+        <button type="submit" class="btn-atelier btn-atelier-gold">Save Progress</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+function openProgressModal(bookId, title, pagesRead, totalPages) {
+  document.getElementById('modal-book-id').value = bookId;
+  document.getElementById('modal-book-title').textContent = 'Progress: ' + title;
+  const pagesInput = document.getElementById('modal-pages-read');
+  pagesInput.value = pagesRead;
+  pagesInput.max = totalPages;
+  document.getElementById('modal-total-pages-label').textContent = 'Book Total: ' + totalPages + ' pages';
+  openModal('quick-progress-modal');
+}
+</script>
+{% endblock %}

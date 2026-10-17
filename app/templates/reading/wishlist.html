@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block title %}My Wishlist — BookWise Atelier{% endblock %}
+
+{% block content %}
+<div class="atelier-container" style="padding-top: 2rem;">
+
+  <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2rem; border-bottom: 1px solid var(--color-border); padding-bottom: 1rem;">
+    <div>
+      <h1 style="font-family: var(--font-serif); margin-bottom: 6px;">Personal Wishlist</h1>
+      <p style="color: var(--color-text-secondary); margin: 0;">Volumes saved for future acquisition or thoughtful contemplation.</p>
+    </div>
+    <a href="{{ url_for('books.catalogue') }}" class="btn-atelier btn-atelier-primary btn-atelier-sm">
+      + Browse More Books
+    </a>
+  </div>
+
+  {% if wishlist_items %}
+    <div class="books-grid">
+      {% for item in wishlist_items %}
+        {% set b = item.book %}
+        <div class="book-card">
+          <a href="{{ url_for('books.detail', book_id=b.id) }}" class="book-cover-container">
+            <img src="{{ b.cover_url or b.get_fallback_svg() }}" alt="{{ b.title }}" class="book-cover-img" data-fallback="{{ b.get_fallback_svg() }}">
+          </a>
+          <div class="book-info">
+            <a href="{{ url_for('books.detail', book_id=b.id) }}">
+              <div class="book-title">{{ b.title }}</div>
+            </a>
+            <div class="book-author">by {{ b.author }}</div>
+
+            <div style="display: flex; gap: 6px; margin-top: auto; padding-top: 10px;">
+              <form method="POST" action="{{ url_for('reading.set_status') }}" style="flex: 1;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="book_id" value="{{ b.id }}">
+                <input type="hidden" name="status" value="want_to_read">
+                <button type="submit" class="btn-atelier btn-atelier-primary btn-atelier-sm" style="width: 100%;">
+                  + Move to Shelf
+                </button>
+              </form>
+
+              <form method="POST" action="{{ url_for('reading.toggle_wishlist', book_id=b.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn-atelier btn-atelier-secondary btn-atelier-sm" title="Remove from Wishlist">
+                  &times;
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="atelier-card empty-state">
+      <div class="empty-state-icon">🤍</div>
+      <h3>Your Wishlist is Empty</h3>
+      <p>Click the Wishlist button on any book detail page to save it for later.</p>
+      <a href="{{ url_for('books.catalogue') }}" class="btn-atelier btn-atelier-gold btn-atelier-sm">Explore Books</a>
+    </div>
+  {% endif %}
+
+</div>
+{% endblock %}

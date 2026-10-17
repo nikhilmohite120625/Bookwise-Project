@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+
+{% block title %}Personal Collections — BookWise Atelier{% endblock %}
+
+{% block content %}
+<div class="atelier-container" style="max-width: 860px; padding-top: 2rem;">
+
+  <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2rem; border-bottom: 1px solid var(--color-border); padding-bottom: 1rem; flex-wrap: wrap; gap: 16px;">
+    <div>
+      <span style="font-size: 0.8rem; font-weight: 700; color: var(--color-accent-gold-dark); text-transform: uppercase; letter-spacing: 1px;">Curated Volumes</span>
+      <h1 style="font-family: var(--font-serif); margin-top: 4px; margin-bottom: 6px;">Personal Collections</h1>
+      <p style="color: var(--color-text-secondary); margin: 0;">Create thematic book bundles like "Summer Escapes", "Philosophy Essentials", or "Sci-Fi Musts".</p>
+    </div>
+  </div>
+
+  <!-- Create Collection Form Card -->
+  <div class="atelier-card" style="margin-bottom: 2.5rem; padding: 1.75rem;">
+    <h3 style="margin-bottom: 1.25rem;">Create New Collection</h3>
+
+    <form method="POST" action="{{ url_for('collections.index') }}">
+      {{ form.hidden_tag() }}
+
+      <div class="form-group-atelier">
+        {{ form.name.label(class="form-label-atelier") }}
+        {{ form.name(class="form-control-atelier", placeholder="e.g. Stoic Philosophy Masterclass") }}
+        {% for error in form.name.errors %}
+          <div style="color: var(--color-danger); font-size: 0.8rem;">{{ error }}</div>
+        {% endfor %}
+      </div>
+
+      <div class="form-group-atelier">
+        {{ form.description.label(class="form-label-atelier") }}
+        {{ form.description(class="form-control-atelier", rows=2, placeholder="Brief description of the purpose or theme of this collection...") }}
+      </div>
+
+      <button type="submit" class="btn-atelier btn-atelier-gold">
+        Create Collection
+      </button>
+    </form>
+  </div>
+
+  <!-- Collections List -->
+  {% if collections %}
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px;">
+      {% for coll in collections %}
+        <div class="atelier-card" style="display: flex; flex-direction: column; justify-content: space-between; padding: 1.5rem;">
+          <div>
+            <div style="font-size: 0.8rem; color: var(--color-accent-gold-dark); font-weight: 600; text-transform: uppercase;">
+              Collection • {{ coll.items.count() }} Books
+            </div>
+            <h3 style="margin: 6px 0 8px;">{{ coll.name }}</h3>
+            {% if coll.description %}
+              <p style="font-size: 0.9rem; color: var(--color-text-secondary); margin-bottom: 1rem;">{{ coll.description }}</p>
+            {% endif %}
+          </div>
+
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1.25rem; padding-top: 1rem; border-top: 1px solid var(--color-border);">
+            <a href="{{ url_for('collections.detail', collection_id=coll.id) }}" class="btn-atelier btn-atelier-primary btn-atelier-sm">
+              View Books &rarr;
+            </a>
+
+            <form method="POST" action="{{ url_for('collections.delete', collection_id=coll.id) }}" onsubmit="return confirm('Delete this collection?');">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="submit" class="btn-atelier btn-atelier-secondary btn-atelier-sm" style="color: var(--color-danger);">
+                Delete
+              </button>
+            </form>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="atelier-card empty-state">
+      <div class="empty-state-icon">📁</div>
+      <h3>No Collections Created</h3>
+      <p>Group your books into personalized curated bundles using the form above.</p>
+    </div>
+  {% endif %}
+
+</div>
+{% endblock %}

@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+
+{% block title %}Book Comparison — BookWise Atelier{% endblock %}
+
+{% block content %}
+<div class="atelier-container" style="padding-top: 2rem;">
+
+  <div style="margin-bottom: 2rem; border-bottom: 1px solid var(--color-border); padding-bottom: 1rem;">
+    <h1 style="font-family: var(--font-serif); margin-bottom: 6px;">Side-by-Side Book Comparison</h1>
+    <p style="color: var(--color-text-secondary); margin: 0;">Compare narrative themes, pacing, page counts, and personalized compatibility across up to three titles.</p>
+  </div>
+
+  <!-- Selector Form -->
+  <form method="GET" action="{{ url_for('books.compare') }}" style="margin-bottom: 2rem; background: var(--color-bg-card); padding: 1.25rem; border-radius: var(--radius-md); border: 1px solid var(--color-border); display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+    <span style="font-weight: 600; font-size: 0.9rem;">Select Books:</span>
+    <select name="id" class="form-control-atelier" style="width: auto; flex: 1; min-width: 200px;">
+      {% for b in all_books %}
+        <option value="{{ b.id }}" {% if selected_ids|length > 0 and selected_ids[0] == b.id %}selected{% endif %}>{{ b.title }} ({{ b.author }})</option>
+      {% endfor %}
+    </select>
+    <select name="id" class="form-control-atelier" style="width: auto; flex: 1; min-width: 200px;">
+      {% for b in all_books %}
+        <option value="{{ b.id }}" {% if selected_ids|length > 1 and selected_ids[1] == b.id %}selected{% endif %}>{{ b.title }} ({{ b.author }})</option>
+      {% endfor %}
+    </select>
+    <select name="id" class="form-control-atelier" style="width: auto; flex: 1; min-width: 200px;">
+      <option value="">— Optional 3rd Book —</option>
+      {% for b in all_books %}
+        <option value="{{ b.id }}" {% if selected_ids|length > 2 and selected_ids[2] == b.id %}selected{% endif %}>{{ b.title }} ({{ b.author }})</option>
+      {% endfor %}
+    </select>
+    <button type="submit" class="btn-atelier btn-atelier-gold btn-atelier-sm">Compare Titles</button>
+  </form>
+
+  {% if comparison_data %}
+    <div class="atelier-card" style="padding: 0; overflow-x: auto;">
+      <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.95rem;">
+        <thead>
+          <tr style="border-bottom: 2px solid var(--color-border); background-color: var(--color-bg-subtle);">
+            <th style="padding: 16px; width: 180px;">Feature</th>
+            {% for item in comparison_data %}
+              <th style="padding: 16px; min-width: 240px; text-align: center;">
+                <img src="{{ item.book.cover_url or item.book.get_fallback_svg() }}" alt="{{ item.book.title }}" style="width: 90px; height: 130px; object-fit: cover; border-radius: 6px; box-shadow: var(--shadow-sm); margin-bottom: 8px;">
+                <div style="font-family: var(--font-serif); font-size: 1.1rem; font-weight: 700;">{{ item.book.title }}</div>
+                <div style="font-size: 0.85rem; color: var(--color-text-secondary); font-style: italic;">{{ item.book.author }}</div>
+              </th>
+            {% endfor %}
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Compatibility Score -->
+          {% if current_user.is_authenticated %}
+            <tr style="border-bottom: 1px solid var(--color-border); background-color: var(--color-gold-bg);">
+              <td style="padding: 14px 16px; font-weight: 600;">Personal Compatibility</td>
+              {% for item in comparison_data %}
+                <td style="padding: 14px 16px; text-align: center;">
+                  <span class="score-badge {% if item.evaluation.total_score >= 70 %}score-badge-high{% elif item.evaluation.total_score >= 40 %}score-badge-med{% else %}score-badge-low{% endif %}" style="font-size: 1rem;">
+                    {{ item.evaluation.display_score }} / 100 Pts
+                  </span>
+                </td>
+              {% endfor %}
+            </tr>
+          {% endif %}
+
+          <tr style="border-bottom: 1px solid var(--color-border);">
+            <td style="padding: 14px 16px; font-weight: 600;">Rating</td>
+            {% for item in comparison_data %}
+              <td style="padding: 14px 16px; text-align: center;">
+                ⭐ <strong>{{ item.book.rating or 'N/A' }}</strong> / 5.0
+              </td>
+            {% endfor %}
+          </tr>
+
+          <tr style="border-bottom: 1px solid var(--color-border);">
+            <td style="padding: 14px 16px; font-weight: 600;">Genres</td>
+            {% for item in comparison_data %}
+              <td style="padding: 14px 16px; text-align: center;">
+                {{ item.book.genres_list|join(', ') }}
+              </td>
+            {% endfor %}
+          </tr>
+
+          <tr style="border-bottom: 1px solid var(--color-border);">
+            <td style="padding: 14px 16px; font-weight: 600;">Language</td>
+            {% for item in comparison_data %}
+              <td style="padding: 14px 16px; text-align: center;">
+                {{ item.book.language }}
+              </td>
+            {% endfor %}
+          </tr>
+
+          <tr style="border-bottom: 1px solid var(--color-border);">
+            <td style="padding: 14px 16px; font-weight: 600;">Publication Year</td>
+            {% for item in comparison_data %}
+              <td style="padding: 14px 16px; text-align: center;">
+                {{ item.book.publication_year or 'Unknown' }}
+              </td>
+            {% endfor %}
+          </tr>
+
+          <tr style="border-bottom: 1px solid var(--color-border);">
+            <td style="padding: 14px 16px; font-weight: 600;">Age Suitability</td>
+            {% for item in comparison_data %}
+              <td style="padding: 14px 16px; text-align: center;">
+                <span class="genre-tag">{{ item.book.age_suitability }}</span>
+              </td>
+            {% endfor %}
+          </tr>
+
+          <tr style="border-bottom: 1px solid var(--color-border);">
+            <td style="padding: 14px 16px; font-weight: 600;">Estimated Pace / Duration</td>
+            {% for item in comparison_data %}
+              <td style="padding: 14px 16px; text-align: center;">
+                ⏱️ {{ item.book.estimated_duration or 30 }} minutes / session
+              </td>
+            {% endfor %}
+          </tr>
+
+          <tr style="border-bottom: 1px solid var(--color-border);">
+            <td style="padding: 14px 16px; font-weight: 600;">Length</td>
+            {% for item in comparison_data %}
+              <td style="padding: 14px 16px; text-align: center;">
+                {{ item.book.page_count or 'N/A' }} pages
+              </td>
+            {% endfor %}
+          </tr>
+
+          <tr>
+            <td style="padding: 16px; font-weight: 600;">Actions</td>
+            {% for item in comparison_data %}
+              <td style="padding: 16px; text-align: center;">
+                <a href="{{ url_for('books.detail', book_id=item.book.id) }}" class="btn-atelier btn-atelier-primary btn-atelier-sm">
+                  View Full Details
+                </a>
+              </td>
+            {% endfor %}
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  {% endif %}
+
+</div>
+{% endblock %}

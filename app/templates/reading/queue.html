@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block title %}Reading Priority Queue — BookWise Atelier{% endblock %}
+
+{% block content %}
+<div class="atelier-container" style="max-width: 800px; padding-top: 2rem;">
+
+  <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2rem; border-bottom: 1px solid var(--color-border); padding-bottom: 1rem;">
+    <div>
+      <h1 style="font-family: var(--font-serif); margin-bottom: 6px;">Reading Priority Queue</h1>
+      <p style="color: var(--color-text-secondary); margin: 0;">Organize the sequence of titles waiting on your Want to Read shelf.</p>
+    </div>
+    <a href="{{ url_for('reading.my_books', shelf='want_to_read') }}" class="btn-atelier btn-atelier-secondary btn-atelier-sm">
+      &larr; Back to Shelves
+    </a>
+  </div>
+
+  {% if queue_records %}
+    <div style="display: flex; flex-direction: column; gap: 12px;">
+      {% for rec in queue_records %}
+        {% set b = rec.book %}
+        <div class="atelier-card" style="display: flex; align-items: center; justify-content: space-between; padding: 1rem 1.25rem;">
+          <div style="display: flex; align-items: center; gap: 16px;">
+            <span style="font-weight: 700; font-size: 1.1rem; color: var(--color-accent-gold-dark); width: 24px;">#{{ loop.index }}</span>
+            <img src="{{ b.cover_url or b.get_fallback_svg() }}" alt="{{ b.title }}" style="width: 48px; height: 70px; object-fit: cover; border-radius: 4px;" class="book-cover-img" data-fallback="{{ b.get_fallback_svg() }}">
+            <div>
+              <a href="{{ url_for('books.detail', book_id=b.id) }}">
+                <h4 style="margin: 0 0 2px;">{{ b.title }}</h4>
+              </a>
+              <div style="font-size: 0.85rem; color: var(--color-text-secondary); font-style: italic;">by {{ b.author }}</div>
+              <div style="font-size: 0.78rem; color: var(--color-text-muted);">{{ b.primary_genre }} • ⏱️ {{ b.estimated_duration or 30 }}m</div>
+            </div>
+          </div>
+
+          <form method="POST" action="{{ url_for('reading.set_status') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="book_id" value="{{ b.id }}">
+            <input type="hidden" name="status" value="currently_reading">
+            <button type="submit" class="btn-atelier btn-atelier-primary btn-atelier-sm">
+              Start Reading Now
+            </button>
+          </form>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="atelier-card empty-state">
+      <div class="empty-state-icon">📚</div>
+      <h3>No Books in Your Queue</h3>
+      <p>Add books to your Want to Read shelf to organize your upcoming reading queue.</p>
+      <a href="{{ url_for('books.catalogue') }}" class="btn-atelier btn-atelier-gold btn-atelier-sm">Browse Books</a>
+    </div>
+  {% endif %}
+
+</div>
+{% endblock %}

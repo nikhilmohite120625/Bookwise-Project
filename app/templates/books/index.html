@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+
+{% block title %}Curated Catalogue — BookWise Atelier{% endblock %}
+
+{% block content %}
+<div class="atelier-container" style="padding-top: 2rem;">
+
+  <!-- Header Banner -->
+  <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2rem; border-bottom: 1px solid var(--color-border); padding-bottom: 1rem; flex-wrap: wrap; gap: 16px;">
+    <div>
+      <h1 style="font-family: var(--font-serif); margin-bottom: 6px;">Curated Book Catalogue</h1>
+      <p style="color: var(--color-text-secondary); margin: 0;">Explore volumes across diverse genres, languages, and durations.</p>
+    </div>
+    <div style="display: flex; gap: 10px;">
+      <a href="{{ url_for('discover.surprise_me') }}" class="btn-atelier btn-atelier-gold btn-atelier-sm">🎲 Surprise Me</a>
+      <a href="{{ url_for('books.compare') }}" class="btn-atelier btn-atelier-secondary btn-atelier-sm">⚖️ Compare Books</a>
+    </div>
+  </div>
+
+  <div class="catalogue-layout">
+    
+    <!-- Filter Sidebar -->
+    <aside class="filter-sidebar atelier-card" style="padding: 1.5rem; position: sticky; top: 90px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+        <h4 style="margin: 0; font-size: 1.1rem;">Filters</h4>
+        <a href="{{ url_for('books.catalogue') }}" style="font-size: 0.8rem; color: var(--color-text-muted);">Reset All</a>
+      </div>
+
+      <form method="GET" action="{{ url_for('books.catalogue') }}">
+        <!-- Search Keyword -->
+        <div class="form-group-atelier">
+          <label class="form-label-atelier">Search</label>
+          <input type="text" name="q" value="{{ search_query }}" placeholder="Title or author..." class="form-control-atelier" style="font-size: 0.875rem;">
+        </div>
+
+        <!-- Genre Filter -->
+        <div class="form-group-atelier">
+          <label class="form-label-atelier">Genre</label>
+          <select name="genre" class="form-control-atelier" style="font-size: 0.875rem;" onchange="this.form.submit()">
+            <option value="">— All Genres —</option>
+            {% for g in all_genres %}
+              <option value="{{ g }}" {% if selected_genre == g %}selected{% endif %}>{{ g }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <!-- Language Filter -->
+        <div class="form-group-atelier">
+          <label class="form-label-atelier">Language</label>
+          <select name="language" class="form-control-atelier" style="font-size: 0.875rem;" onchange="this.form.submit()">
+            <option value="">— All Languages —</option>
+            {% for l in all_languages %}
+              <option value="{{ l }}" {% if selected_language == l %}selected{% endif %}>{{ l }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <!-- Age Suitability Filter -->
+        <div class="form-group-atelier">
+          <label class="form-label-atelier">Age Suitability</label>
+          <select name="age" class="form-control-atelier" style="font-size: 0.875rem;" onchange="this.form.submit()">
+            <option value="">— All Levels —</option>
+            {% for a in age_categories %}
+              <option value="{{ a }}" {% if selected_age == a %}selected{% endif %}>{{ a }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <!-- Minimum Rating -->
+        <div class="form-group-atelier">
+          <label class="form-label-atelier">Minimum Rating</label>
+          <select name="rating" class="form-control-atelier" style="font-size: 0.875rem;" onchange="this.form.submit()">
+            <option value="">— Any Rating —</option>
+            <option value="4.5" {% if min_rating == 4.5 %}selected{% endif %}>⭐ 4.5 &amp; above</option>
+            <option value="4.0" {% if min_rating == 4.0 %}selected{% endif %}>⭐ 4.0 &amp; above</option>
+            <option value="3.5" {% if min_rating == 3.5 %}selected{% endif %}>⭐ 3.5 &amp; above</option>
+          </select>
+        </div>
+
+        <!-- Sort By -->
+        <div class="form-group-atelier">
+          <label class="form-label-atelier">Sort Order</label>
+          <select name="sort" class="form-control-atelier" style="font-size: 0.875rem;" onchange="this.form.submit()">
+            <option value="rating_desc" {% if sort_by == 'rating_desc' %}selected{% endif %}>Highest Rated</option>
+            <option value="title_asc" {% if sort_by == 'title_asc' %}selected{% endif %}>Title (A - Z)</option>
+            <option value="year_desc" {% if sort_by == 'year_desc' %}selected{% endif %}>Newest Year</option>
+            <option value="duration_asc" {% if sort_by == 'duration_asc' %}selected{% endif %}>Fastest Read</option>
+          </select>
+        </div>
+
+        <button type="submit" class="btn-atelier btn-atelier-primary btn-atelier-sm" style="width: 100%; margin-top: 0.5rem;">
+          Apply Filters
+        </button>
+      </form>
+    </aside>
+
+    <!-- Main Results Section -->
+    <main>
+      {% if books %}
+        <div class="books-grid">
+          {% for book in books %}
+            <div class="book-card">
+              <a href="{{ url_for('books.detail', book_id=book.id) }}" class="book-cover-container">
+                <img src="{{ book.cover_url or book.get_fallback_svg() }}" alt="{{ book.title }}" class="book-cover-img" data-fallback="{{ book.get_fallback_svg() }}">
+                
+                <div class="book-badge-overlay">
+                  {% if book.id in user_records %}
+                    {% set st = user_records[book.id] %}
+                    <span class="score-badge {% if st == 'completed' %}score-badge-high{% else %}score-badge-med{% endif %}">
+                      {{ st.replace('_', ' ').title() }}
+                    </span>
+                  {% elif book.id in user_wishlist_ids %}
+                    <span class="score-badge score-badge-low">In Wishlist</span>
+                  {% else %}
+                    <span class="score-badge score-badge-med">⭐ {{ book.rating }}</span>
+                  {% endif %}
+                </div>
+              </a>
+
+              <div class="book-info">
+                <div class="book-genres">
+                  {% for g in book.genres_list[:2] %}
+                    <span class="genre-tag">{{ g }}</span>
+                  {% endfor %}
+                </div>
+                
+                <a href="{{ url_for('books.detail', book_id=book.id) }}">
+                  <div class="book-title">{{ book.title }}</div>
+                </a>
+                <div class="book-author">by {{ book.author }}</div>
+
+                <div class="book-meta">
+                  <span>⏱️ {{ book.estimated_duration or 30 }}m</span>
+                  <span>•</span>
+                  <span>{{ book.page_count or 'N/A' }} pages</span>
+                </div>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+
+        <!-- Pagination -->
+        {% if pagination.pages > 1 %}
+          <div style="display: flex; justify-content: center; align-items: center; gap: 8px; margin-top: 3rem;">
+            {% if pagination.has_prev %}
+              <a href="{{ url_for('books.catalogue', page=pagination.prev_num, q=search_query, genre=selected_genre, language=selected_language, age=selected_age, rating=min_rating, sort=sort_by) }}" class="btn-atelier btn-atelier-secondary btn-atelier-sm">&laquo; Previous</a>
+            {% endif %}
+
+            <span style="font-size: 0.9rem; color: var(--color-text-muted); padding: 0 12px;">
+              Page {{ pagination.page }} of {{ pagination.pages }}
+            </span>
+
+            {% if pagination.has_next %}
+              <a href="{{ url_for('books.catalogue', page=pagination.next_num, q=search_query, genre=selected_genre, language=selected_language, age=selected_age, rating=min_rating, sort=sort_by) }}" class="btn-atelier btn-atelier-secondary btn-atelier-sm">Next &raquo;</a>
+            {% endif %}
+          </div>
+        {% endif %}
+
+      {% else %}
+        <div class="atelier-card empty-state">
+          <div class="empty-state-icon">📖</div>
+          <h3>No Volumes Found</h3>
+          <p>No books match your current search and filter criteria.</p>
+          <a href="{{ url_for('books.catalogue') }}" class="btn-atelier btn-atelier-gold btn-atelier-sm">Reset All Filters</a>
+        </div>
+      {% endif %}
+    </main>
+
+  </div>
+</div>
+{% endblock %}

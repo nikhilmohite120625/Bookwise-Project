@@ -1,0 +1,184 @@
+{% extends "base.html" %}
+
+{% block title %}BookWise — Find Your Next Favourite Book{% endblock %}
+
+{% block content %}
+<div class="atelier-container">
+
+  <!-- Editorial Hero Section -->
+  <section style="padding: 4rem 0 3rem; text-align: center; max-width: 860px; margin: 0 auto;">
+    <div style="display: inline-block; padding: 4px 14px; border-radius: var(--radius-pill); background-color: var(--color-gold-bg); border: 1px solid var(--color-border-gold); color: var(--color-accent-gold-dark); font-size: 0.85rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 1rem;">
+      The Reading Atelier
+    </div>
+    <h1 style="font-size: 3.25rem; font-family: var(--font-serif); margin-bottom: 1.25rem; line-height: 1.15; color: var(--color-primary);">
+      Find Your Next Favourite Book.
+    </h1>
+    <p style="font-size: 1.2rem; color: var(--color-text-secondary); line-height: 1.6; margin-bottom: 2.25rem;">
+      A refined digital reading sanctuary featuring deterministic 100-point explainable book recommendations, thoughtful shelf management, reading timers, and personal habit analytics.
+    </p>
+
+    <!-- Prominent Catalogue Search Bar -->
+    <form action="{{ url_for('books.catalogue') }}" method="GET" style="display: flex; gap: 8px; max-width: 620px; margin: 0 auto 2.5rem; background: var(--color-bg-surface); padding: 6px; border-radius: var(--radius-lg); border: 1px solid var(--color-border); box-shadow: var(--shadow-md);">
+      <input type="text" name="q" placeholder="Search by title, author, themes, or keywords..." class="form-control-atelier" style="border: none; background: transparent; padding: 12px 18px; font-size: 1rem;" required>
+      <button type="submit" class="btn-atelier btn-atelier-gold" style="padding: 12px 24px; white-space: nowrap;">
+        Search Catalogue
+      </button>
+    </form>
+
+    <div style="display: flex; justify-content: center; gap: 14px; flex-wrap: wrap;">
+      <a href="{{ url_for('books.catalogue') }}" class="btn-atelier btn-atelier-secondary">Browse All {{ total_books }} Books</a>
+      <a href="{{ url_for('discover.index') }}" class="btn-atelier btn-atelier-outline">Explore Reading Moods</a>
+      <a href="{{ url_for('discover.surprise_me') }}" class="btn-atelier btn-atelier-gold">🎲 Surprise Me</a>
+    </div>
+  </section>
+
+  <!-- Featured Books Section -->
+  <section style="margin-bottom: 4rem;">
+    <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 1.5rem; border-bottom: 1px solid var(--color-border); padding-bottom: 0.75rem;">
+      <div>
+        <h2 style="margin-bottom: 4px;">Featured Atelier Volumes</h2>
+        <p style="color: var(--color-text-muted); margin: 0; font-size: 0.95rem;">Critically acclaimed works curated for depth, storytelling, and craftsmanship.</p>
+      </div>
+      <a href="{{ url_for('books.catalogue') }}" style="font-weight: 500; font-size: 0.9rem;">View All Catalogue &rarr;</a>
+    </div>
+
+    <div class="books-grid">
+      {% for book in featured_books %}
+        <div class="book-card">
+          <a href="{{ url_for('books.detail', book_id=book.id) }}" class="book-cover-container">
+            <img src="{{ book.cover_url or book.get_fallback_svg() }}" alt="{{ book.title }}" class="book-cover-img" data-fallback="{{ book.get_fallback_svg() }}">
+            <div class="book-badge-overlay">
+              <span class="score-badge score-badge-med">⭐ {{ book.rating }}</span>
+            </div>
+          </a>
+          <div class="book-info">
+            <div class="book-genres">
+              {% for g in book.genres_list[:2] %}
+                <span class="genre-tag">{{ g }}</span>
+              {% endfor %}
+            </div>
+            <a href="{{ url_for('books.detail', book_id=book.id) }}">
+              <div class="book-title">{{ book.title }}</div>
+            </a>
+            <div class="book-author">by {{ book.author }}</div>
+            <div class="book-meta">
+              <span>⏱️ {{ book.estimated_duration or 30 }}m pace</span>
+              <span>•</span>
+              <span>{{ book.language }}</span>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </section>
+
+  <!-- Explainable Recommendations Architecture Teaser -->
+  <section style="background-color: var(--color-bg-card); border: 1px solid var(--color-border); border-radius: var(--radius-lg); padding: 3rem 2rem; margin-bottom: 4rem;">
+    <div style="text-align: center; max-width: 760px; margin: 0 auto 2.5rem;">
+      <h2 style="font-size: 2rem; margin-bottom: 0.75rem;">Explainable, Deterministic Recommendations</h2>
+      <p style="color: var(--color-text-secondary); font-size: 1.05rem; line-height: 1.6;">
+        No opaque AI black boxes or sponsored commercial bias. BookWise computes recommendations across 5 auditable dimensions totaling 100 points, explaining precisely why each book is recommended to you.
+      </p>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
+      <div class="atelier-card" style="text-align: center;">
+        <div style="font-size: 1.75rem; font-weight: 700; color: var(--color-primary); margin-bottom: 4px;">40 Pts</div>
+        <h4 style="margin-bottom: 8px;">Genre Affinity</h4>
+        <p style="font-size: 0.85rem; color: var(--color-text-muted); margin: 0;">Compatibility with your preferred literary genres and favorite subcategories.</p>
+      </div>
+
+      <div class="atelier-card" style="text-align: center;">
+        <div style="font-size: 1.75rem; font-weight: 700; color: var(--color-primary); margin-bottom: 4px;">20 Pts</div>
+        <h4 style="margin-bottom: 8px;">Language Fit</h4>
+        <p style="font-size: 0.85rem; color: var(--color-text-muted); margin: 0;">Matches books published in your fluent and preferred reading languages.</p>
+      </div>
+
+      <div class="atelier-card" style="text-align: center;">
+        <div style="font-size: 1.75rem; font-weight: 700; color: var(--color-primary); margin-bottom: 4px;">15 Pts</div>
+        <h4 style="margin-bottom: 8px;">Age Suitability</h4>
+        <p style="font-size: 0.85rem; color: var(--color-text-muted); margin: 0;">Strict deterministic suitability validation ensuring appropriate content rating.</p>
+      </div>
+
+      <div class="atelier-card" style="text-align: center;">
+        <div style="font-size: 1.75rem; font-weight: 700; color: var(--color-primary); margin-bottom: 4px;">15 Pts</div>
+        <h4 style="margin-bottom: 8px;">Duration Pace</h4>
+        <p style="font-size: 0.85rem; color: var(--color-text-muted); margin: 0;">Deterministic distance formula evaluating proximity to your preferred reading session duration.</p>
+      </div>
+
+      <div class="atelier-card" style="text-align: center;">
+        <div style="font-size: 1.75rem; font-weight: 700; color: var(--color-primary); margin-bottom: 4px;">10 Pts</div>
+        <h4 style="margin-bottom: 8px;">Interest Topics</h4>
+        <p style="font-size: 0.85rem; color: var(--color-text-muted); margin: 0;">Token matching across your custom keywords, themes, and book synopses.</p>
+      </div>
+    </div>
+
+    <div style="text-align: center; margin-top: 2.5rem;">
+      {% if current_user.is_authenticated %}
+        <a href="{{ url_for('recommendations.index') }}" class="btn-atelier btn-atelier-primary">View My Personalized Recommendations &rarr;</a>
+      {% else %}
+        <a href="{{ url_for('auth.register') }}" class="btn-atelier btn-atelier-gold">Create Profile &amp; Get Personalized Recommendations &rarr;</a>
+      {% endif %}
+    </div>
+  </section>
+
+  <!-- Popular Genres Bar -->
+  <section style="margin-bottom: 4rem;">
+    <h3 style="margin-bottom: 1rem; border-bottom: 1px solid var(--color-border); padding-bottom: 0.5rem;">Explore By Genre</h3>
+    <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+      {% for g in genres %}
+        <a href="{{ url_for('books.catalogue', genre=g) }}" class="btn-atelier btn-atelier-secondary btn-atelier-sm" style="font-size: 0.875rem;">
+          {{ g }}
+        </a>
+      {% endfor %}
+    </div>
+  </section>
+
+  <!-- Reading Productivity Ecosystem Highlights -->
+  <section style="margin-bottom: 4rem;">
+    <div style="text-align: center; max-width: 650px; margin: 0 auto 2.5rem;">
+      <h2 style="font-size: 2rem;">A Complete Reading Ecosystem</h2>
+      <p style="color: var(--color-text-secondary);">Everything you need to organize your collection, cultivate a daily reading habit, and track your intellectual growth.</p>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px;">
+      <div class="atelier-card">
+        <div style="font-size: 2rem; margin-bottom: 8px;">📚</div>
+        <h3>Three Dedicated Shelves</h3>
+        <p style="color: var(--color-text-secondary); font-size: 0.95rem;">Seamlessly manage Want to Read, Currently Reading, and Completed books with page progress and personal notes.</p>
+      </div>
+
+      <div class="atelier-card">
+        <div style="font-size: 2rem; margin-bottom: 8px;">⏱️</div>
+        <h3>Focus Reading Stopwatch</h3>
+        <p style="color: var(--color-text-secondary); font-size: 0.95rem;">A distraction-free reading timer that logs your minutes, safeguards against duplicate submits, and builds daily streaks.</p>
+      </div>
+
+      <div class="atelier-card">
+        <div style="font-size: 2rem; margin-bottom: 8px;">🔥</div>
+        <h3>Habit Streaks &amp; Calendar</h3>
+        <p style="color: var(--color-text-secondary); font-size: 0.95rem;">Visualize your monthly reading momentum with an interactive daily heatmap and all-time streak counters.</p>
+      </div>
+
+      <div class="atelier-card">
+        <div style="font-size: 2rem; margin-bottom: 8px;">✒️</div>
+        <h3>Private Literary Journal</h3>
+        <p style="color: var(--color-text-secondary); font-size: 0.95rem;">Record quotes, chapter reflections, and private takeaways linked directly to books in your collection.</p>
+      </div>
+
+      <div class="atelier-card">
+        <div style="font-size: 2rem; margin-bottom: 8px;">🎯</div>
+        <h3>Annual Reading Goals</h3>
+        <p style="color: var(--color-text-secondary); font-size: 0.95rem;">Set annual targets and track pacing with beautiful velocity charts powered by Chart.js.</p>
+      </div>
+
+      <div class="atelier-card">
+        <div style="font-size: 2rem; margin-bottom: 8px;">💡</div>
+        <h3>Conversational Assistant</h3>
+        <p style="color: var(--color-text-secondary); font-size: 0.95rem;">A local, rule-based companion that recommends books based on session minutes, moods, or current progress.</p>
+      </div>
+    </div>
+  </section>
+
+</div>
+{% endblock %}

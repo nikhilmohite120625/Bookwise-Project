@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+
+{% block title %}Reading Analytics &amp; Goals — BookWise Atelier{% endblock %}
+
+{% block content %}
+<div class="atelier-container" style="padding-top: 2rem;">
+
+  <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2rem; border-bottom: 1px solid var(--color-border); padding-bottom: 1rem; flex-wrap: wrap; gap: 16px;">
+    <div>
+      <span style="font-size: 0.8rem; font-weight: 700; color: var(--color-accent-gold-dark); text-transform: uppercase; letter-spacing: 1px;">Habits &amp; Velocity</span>
+      <h1 style="font-family: var(--font-serif); margin-top: 4px; margin-bottom: 6px;">Reading Analytics &amp; Goals</h1>
+      <p style="color: var(--color-text-secondary); margin: 0;">Visualize your reading velocity, goal progress, and thematic diversity.</p>
+    </div>
+  </div>
+
+  <!-- Annual Reading Goal Card & Form -->
+  <div class="atelier-card" style="margin-bottom: 2.5rem; background: var(--color-bg-card); border-color: var(--color-border-gold); padding: 2rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 16px;">
+      <div>
+        <div style="font-size: 0.85rem; color: var(--color-accent-gold-dark); font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">
+          {{ summary.goals.year }} Reading Target
+        </div>
+        <h2 style="margin: 4px 0 0;">
+          {{ summary.goals.completed }} of {{ summary.goals.target }} Books Read ({{ summary.goals.percent }}%)
+        </h2>
+      </div>
+
+      <!-- Quick Edit Target Form -->
+      <form method="POST" action="{{ url_for('statistics.index') }}" style="display: flex; align-items: center; gap: 8px;">
+        {{ goal_form.hidden_tag() }}
+        <span style="font-size: 0.85rem; color: var(--color-text-secondary);">Target:</span>
+        {{ goal_form.target_books(class="form-control-atelier", style="width: 80px; padding: 6px 10px; font-size: 0.9rem;") }}
+        {{ goal_form.goal_year(type="hidden") }}
+        <button type="submit" class="btn-atelier btn-atelier-primary btn-atelier-sm">Update Goal</button>
+      </form>
+    </div>
+
+    <!-- Goal Progress Bar -->
+    <div class="reading-progress-track" style="height: 12px;">
+      <div class="reading-progress-fill" style="width: {{ summary.goals.percent }}%;"></div>
+    </div>
+
+    <div style="display: flex; justify-content: space-between; font-size: 0.85rem; color: var(--color-text-secondary); margin-top: 8px;">
+      <span>{{ summary.goals.completed }} books finished</span>
+      <span>{{ summary.goals.remaining }} books remaining to reach target</span>
+    </div>
+  </div>
+
+  <!-- Metric Stat Cards -->
+  <div class="stats-overview-grid" style="margin-bottom: 2.5rem;">
+    <div class="atelier-card" style="padding: 1.25rem;">
+      <div style="font-size: 0.8rem; color: var(--color-text-muted); text-transform: uppercase;">Total Time Logged</div>
+      <div style="font-size: 2rem; font-weight: 700; color: var(--color-primary); margin-top: 4px;">
+        {{ summary.total_hours }} Hours
+      </div>
+    </div>
+
+    <div class="atelier-card" style="padding: 1.25rem;">
+      <div style="font-size: 0.8rem; color: var(--color-text-muted); text-transform: uppercase;">Total Pages Read</div>
+      <div style="font-size: 2rem; font-weight: 700; color: var(--color-accent-gold-dark); margin-top: 4px;">
+        {{ summary.total_pages }} Pages
+      </div>
+    </div>
+
+    <div class="atelier-card" style="padding: 1.25rem;">
+      <div style="font-size: 0.8rem; color: var(--color-text-muted); text-transform: uppercase;">Active Streak</div>
+      <div style="font-size: 2rem; font-weight: 700; color: #ea580c; margin-top: 4px;">
+        {{ summary.streaks.current_streak }} Days 🔥
+      </div>
+    </div>
+
+    <div class="atelier-card" style="padding: 1.25rem;">
+      <div style="font-size: 0.8rem; color: var(--color-text-muted); text-transform: uppercase;">Longest Streak</div>
+      <div style="font-size: 2rem; font-weight: 700; color: var(--color-success); margin-top: 4px;">
+        {{ summary.streaks.longest_streak }} Days 🏆
+      </div>
+    </div>
+  </div>
+
+  <!-- Charts Grid -->
+  <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px; margin-bottom: 3rem;">
+    
+    <!-- 1. Monthly Velocity Chart -->
+    <div class="atelier-card" style="padding: 1.5rem;">
+      <h3 style="margin-bottom: 1rem; font-size: 1.2rem;">Monthly Reading Velocity ({{ current_year }})</h3>
+      <div style="position: relative; height: 300px; width: 100%;">
+        <canvas id="monthlyVelocityChart"></canvas>
+      </div>
+    </div>
+
+    <!-- 2. Genre Distribution Doughnut -->
+    <div class="atelier-card" style="padding: 1.5rem;">
+      <h3 style="margin-bottom: 1rem; font-size: 1.2rem;">Genre Distribution</h3>
+      <div style="position: relative; height: 300px; width: 100%;">
+        <canvas id="genreDistributionChart"></canvas>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{{ url_for('static', filename='js/charts.js') }}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const monthlyData = {{ monthly_data|tojson }};
+  const genreData = {{ genre_data|tojson }};
+  initStatisticsCharts(monthlyData, genreData);
+});
+</script>
+{% endblock %}

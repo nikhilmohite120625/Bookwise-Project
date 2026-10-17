@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block title %}Reading Atelier Assistant — BookWise{% endblock %}
+
+{% block content %}
+<div class="atelier-container" style="max-width: 800px; padding-top: 2rem;">
+
+  <div style="text-align: center; margin-bottom: 2rem;">
+    <span style="font-size: 0.8rem; font-weight: 700; color: var(--color-accent-gold-dark); text-transform: uppercase; letter-spacing: 1px;">Expert Literary Guide</span>
+    <h1 style="font-family: var(--font-serif); margin-top: 4px; margin-bottom: 6px;">Atelier Reading Companion</h1>
+    <p style="color: var(--color-text-secondary); margin: 0;">A deterministic, local rule-based advisor to match your reading sessions, moods, and habit goals.</p>
+  </div>
+
+  <div class="atelier-card" style="padding: 0; overflow: hidden; display: flex; flex-direction: column; height: 600px; box-shadow: var(--shadow-lg);">
+    
+    <!-- Chat Header -->
+    <div style="background-color: var(--color-bg-card); border-bottom: 1px solid var(--color-border); padding: 14px 20px; display: flex; align-items: center; justify-content: space-between;">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <span style="font-size: 1.5rem;">🦉</span>
+        <div>
+          <div style="font-weight: 600; font-size: 0.95rem;">BookWise Atelier Companion</div>
+          <div style="font-size: 0.75rem; color: var(--color-success); font-weight: 500;">● Deterministic Rule-Based Intelligence Active</div>
+        </div>
+      </div>
+      <span style="font-size: 0.8rem; color: var(--color-text-muted);">No external AI APIs required</span>
+    </div>
+
+    <!-- Chat Messages Scroll Area -->
+    <div id="chat-messages" style="flex: 1; padding: 20px; overflow-y: auto; background-color: var(--color-bg-surface);">
+      <!-- Greeting from Assistant -->
+      <div style="margin-bottom: 16px; display: flex; flex-direction: column; align-items: flex-start;">
+        <div style="max-width: 80%; padding: 12px 18px; border-radius: 12px; background-color: var(--color-bg-card); border: 1px solid var(--color-border); font-size: 0.95rem; line-height: 1.5;">
+          Greetings! I am your personal literary companion within the BookWise Atelier.
+          <br><br>
+          I can guide you based on your available time, recommend books for specific moods, or review your current reading goals and streaks. How may I assist your literary journey today?
+        </div>
+      </div>
+    </div>
+
+    <!-- Suggestions Bar -->
+    <div id="chat-suggestions" style="padding: 10px 16px; background-color: var(--color-bg-subtle); border-top: 1px solid var(--color-border-subtle); display: flex; gap: 8px; flex-wrap: wrap;">
+      <button type="button" class="btn-atelier btn-atelier-secondary btn-atelier-sm initial-suggestion-btn" style="border-radius: 20px; font-size: 0.8rem;">
+        What should I read next?
+      </button>
+      <button type="button" class="btn-atelier btn-atelier-secondary btn-atelier-sm initial-suggestion-btn" style="border-radius: 20px; font-size: 0.8rem;">
+        I have 30 minutes to read
+      </button>
+      <button type="button" class="btn-atelier btn-atelier-secondary btn-atelier-sm initial-suggestion-btn" style="border-radius: 20px; font-size: 0.8rem;">
+        Suggest a mysterious novel
+      </button>
+      <button type="button" class="btn-atelier btn-atelier-secondary btn-atelier-sm initial-suggestion-btn" style="border-radius: 20px; font-size: 0.8rem;">
+        How is my reading goal doing?
+      </button>
+    </div>
+
+    <!-- Chat Input Area -->
+    <div style="padding: 14px 16px; background-color: var(--color-bg-surface); border-top: 1px solid var(--color-border); display: flex; gap: 10px;">
+      <input type="text" id="chat-input" class="form-control-atelier" placeholder="Ask about books, moods, reading time, or your streak..." style="font-size: 0.95rem;">
+      <button type="button" id="chat-send-btn" class="btn-atelier btn-atelier-gold" style="padding: 10px 20px; white-space: nowrap;">
+        Send &rarr;
+      </button>
+    </div>
+
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{{ url_for('static', filename='js/assistant.js') }}"></script>
+{% endblock %}

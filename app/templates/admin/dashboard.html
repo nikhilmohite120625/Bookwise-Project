@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard — BookWise Atelier{% endblock %}
+
+{% block content %}
+<div class="atelier-container" style="padding-top: 2rem;">
+
+  <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2rem; border-bottom: 1px solid var(--color-border); padding-bottom: 1rem; flex-wrap: wrap; gap: 16px;">
+    <div>
+      <span style="font-size: 0.8rem; font-weight: 700; color: var(--color-accent-gold-dark); text-transform: uppercase; letter-spacing: 1px;">Curator Console</span>
+      <h1 style="font-family: var(--font-serif); margin-top: 4px; margin-bottom: 6px;">Catalogue Administration</h1>
+      <p style="color: var(--color-text-secondary); margin: 0;">Manage catalogue volumes, review platform metrics, and maintain data integrity.</p>
+    </div>
+
+    <div style="display: flex; gap: 10px;">
+      <a href="{{ url_for('admin.add_book') }}" class="btn-atelier btn-atelier-gold btn-atelier-sm">
+        + Add New Book
+      </a>
+      <a href="{{ url_for('admin.books_list') }}" class="btn-atelier btn-atelier-secondary btn-atelier-sm">
+        Manage All Books
+      </a>
+    </div>
+  </div>
+
+  <!-- Stat Cards -->
+  <div class="stats-overview-grid" style="margin-bottom: 2.5rem;">
+    <div class="atelier-card" style="padding: 1.25rem;">
+      <div style="font-size: 0.8rem; color: var(--color-text-muted); text-transform: uppercase;">Catalogue Books</div>
+      <div style="font-size: 2rem; font-weight: 700; color: var(--color-primary); margin-top: 4px;">
+        {{ total_books }}
+      </div>
+    </div>
+
+    <div class="atelier-card" style="padding: 1.25rem;">
+      <div style="font-size: 0.8rem; color: var(--color-text-muted); text-transform: uppercase;">Registered Readers</div>
+      <div style="font-size: 2rem; font-weight: 700; color: var(--color-accent-gold-dark); margin-top: 4px;">
+        {{ total_users }}
+      </div>
+    </div>
+
+    <div class="atelier-card" style="padding: 1.25rem;">
+      <div style="font-size: 0.8rem; color: var(--color-text-muted); text-transform: uppercase;">Reading Records</div>
+      <div style="font-size: 2rem; font-weight: 700; color: var(--color-success); margin-top: 4px;">
+        {{ total_records }}
+      </div>
+    </div>
+
+    <div class="atelier-card" style="padding: 1.25rem;">
+      <div style="font-size: 0.8rem; color: var(--color-text-muted); text-transform: uppercase;">Database Dialect</div>
+      <div style="font-size: 1.4rem; font-weight: 700; color: var(--color-text-main); margin-top: 8px;">
+        SQLAlchemy ORM
+      </div>
+    </div>
+  </div>
+
+  <!-- Actions & Recent Books Section -->
+  <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px; margin-bottom: 3rem;">
+    
+    <!-- Recent Books Table -->
+    <div class="atelier-card" style="padding: 1.5rem;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+        <h3 style="margin: 0; font-size: 1.2rem;">Recently Added Volumes</h3>
+        <a href="{{ url_for('admin.books_list') }}" style="font-size: 0.85rem;">View Full List &rarr;</a>
+      </div>
+
+      <div style="overflow-x: auto;">
+        <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
+          <thead>
+            <tr style="border-bottom: 1px solid var(--color-border); text-align: left; color: var(--color-text-muted);">
+              <th style="padding: 8px 4px;">Title</th>
+              <th style="padding: 8px 4px;">Author</th>
+              <th style="padding: 8px 4px;">Rating</th>
+              <th style="padding: 8px 4px; text-align: right;">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for b in recent_books %}
+              <tr style="border-bottom: 1px solid var(--color-border-subtle);">
+                <td style="padding: 10px 4px; font-weight: 500;">
+                  <a href="{{ url_for('books.detail', book_id=b.id) }}">{{ b.title }}</a>
+                </td>
+                <td style="padding: 10px 4px; color: var(--color-text-secondary);">{{ b.author }}</td>
+                <td style="padding: 10px 4px;">⭐ {{ b.rating }}</td>
+                <td style="padding: 10px 4px; text-align: right;">
+                  <a href="{{ url_for('admin.edit_book', book_id=b.id) }}" class="btn-atelier btn-atelier-secondary btn-atelier-sm" style="font-size: 0.75rem; padding: 4px 8px;">
+                    Edit
+                  </a>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Administrative Maintenance Tools -->
+    <div class="atelier-card" style="padding: 1.5rem;">
+      <h3 style="margin-bottom: 1rem; font-size: 1.2rem;">Maintenance &amp; Seeds</h3>
+      <p style="font-size: 0.875rem; color: var(--color-text-secondary); line-height: 1.5; margin-bottom: 1.25rem;">
+        Populate the database with sample books spanning 15 genres, multiple languages, and durations.
+      </p>
+
+      <form method="POST" action="{{ url_for('admin.seed_catalogue') }}" onsubmit="return confirm('Populate / Refresh sample books in catalogue?');">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit" class="btn-atelier btn-atelier-primary" style="width: 100%;">
+          🌱 Seed Sample Catalogue
+        </button>
+      </form>
+    </div>
+
+  </div>
+
+</div>
+{% endblock %}

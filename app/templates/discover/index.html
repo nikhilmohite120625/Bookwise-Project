@@ -1,0 +1,148 @@
+{% extends "base.html" %}
+
+{% block title %}Discover Hub — BookWise Atelier{% endblock %}
+
+{% block content %}
+<div class="atelier-container" style="padding-top: 2rem;">
+
+  <!-- Header Banner -->
+  <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2.5rem; border-bottom: 1px solid var(--color-border); padding-bottom: 1rem; flex-wrap: wrap; gap: 16px;">
+    <div>
+      <span style="font-size: 0.8rem; font-weight: 700; color: var(--color-accent-gold-dark); text-transform: uppercase; letter-spacing: 1px;">Serendipity &amp; Intent</span>
+      <h1 style="font-family: var(--font-serif); margin-top: 4px; margin-bottom: 6px;">Discovery Atelier</h1>
+      <p style="color: var(--color-text-secondary); margin: 0;">Explore literature by reading mood, available time, or serendipitous surprise.</p>
+    </div>
+    
+    <a href="{{ url_for('discover.surprise_me') }}" class="btn-atelier btn-atelier-gold" style="padding: 10px 20px;">
+      🎲 Surprise Me With a Book
+    </a>
+  </div>
+
+  <!-- 1. Mood-Based Discovery -->
+  <section style="margin-bottom: 3.5rem;">
+    <div style="margin-bottom: 1.25rem;">
+      <h3 style="margin-bottom: 4px;">Explore by Reading Mood</h3>
+      <p style="color: var(--color-text-muted); font-size: 0.95rem; margin: 0;">Select your current emotional state or literary appetite:</p>
+    </div>
+
+    <!-- Mood Selector Pills -->
+    <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 1.5rem;">
+      {% for mood_name, mood_info in all_moods.items() %}
+        <a href="{{ url_for('discover.index', mood=mood_name, time=selected_time) }}" class="btn-atelier {% if current_mood == mood_name %}btn-atelier-primary{% else %}btn-atelier-secondary{% endif %} btn-atelier-sm" style="font-size: 0.9rem; padding: 8px 16px;">
+          {{ mood_name.capitalize() }}
+        </a>
+      {% endfor %}
+    </div>
+
+    <!-- Mood Tagline & Results -->
+    {% if mood_data and mood_data.results %}
+      <div style="background-color: var(--color-bg-card); border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: 1rem 1.5rem; margin-bottom: 1.5rem;">
+        <strong style="color: var(--color-primary); font-size: 1.1rem;">{{ mood_data.mood }}:</strong>
+        <span style="color: var(--color-text-secondary); margin-left: 8px;">{{ mood_data.tagline }}</span>
+      </div>
+
+      <div class="books-grid">
+        {% for item in mood_data.results %}
+          {% set b = item.book %}
+          <div class="book-card">
+            <a href="{{ url_for('books.detail', book_id=b.id) }}" class="book-cover-container">
+              <img src="{{ b.cover_url or b.get_fallback_svg() }}" alt="{{ b.title }}" class="book-cover-img" data-fallback="{{ b.get_fallback_svg() }}">
+              <div class="book-badge-overlay">
+                <span class="score-badge score-badge-med">⭐ {{ b.rating }}</span>
+              </div>
+            </a>
+            <div class="book-info">
+              <div class="book-genres">
+                {% for g in b.genres_list[:2] %}
+                  <span class="genre-tag">{{ g }}</span>
+                {% endfor %}
+              </div>
+              <a href="{{ url_for('books.detail', book_id=b.id) }}">
+                <div class="book-title">{{ b.title }}</div>
+              </a>
+              <div class="book-author">by {{ b.author }}</div>
+              <div class="book-meta">
+                <span style="color: var(--color-accent-gold-dark); font-size: 0.75rem;">{{ item.matches[0] }}</span>
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  </section>
+
+  <!-- 2. Reading-Time Finder -->
+  <section style="margin-bottom: 3.5rem; background: var(--color-bg-surface); border: 1px solid var(--color-border); border-radius: var(--radius-lg); padding: 2rem;">
+    <div style="margin-bottom: 1.25rem;">
+      <h3 style="margin-bottom: 4px;">⏱️ Reading-Time Finder</h3>
+      <p style="color: var(--color-text-muted); font-size: 0.95rem; margin: 0;">How much time do you have for reading today? We'll find books with tailored chapter and session durations:</p>
+    </div>
+
+    <!-- Duration Filter Pills -->
+    <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 1.5rem;">
+      {% for mins in [10, 20, 30, 45, 60] %}
+        <a href="{{ url_for('discover.index', time=mins, mood=current_mood) }}" class="btn-atelier {% if selected_time == mins %}btn-atelier-gold{% else %}btn-atelier-secondary{% endif %} btn-atelier-sm" style="padding: 8px 18px; font-weight: 600;">
+          {{ mins }} Minutes
+        </a>
+      {% endfor %}
+    </div>
+
+    {% if time_data %}
+      <div class="books-grid">
+        {% for item in time_data %}
+          {% set b = item.book %}
+          <div class="book-card">
+            <a href="{{ url_for('books.detail', book_id=b.id) }}" class="book-cover-container">
+              <img src="{{ b.cover_url or b.get_fallback_svg() }}" alt="{{ b.title }}" class="book-cover-img" data-fallback="{{ b.get_fallback_svg() }}">
+            </a>
+            <div class="book-info">
+              <a href="{{ url_for('books.detail', book_id=b.id) }}">
+                <div class="book-title">{{ b.title }}</div>
+              </a>
+              <div class="book-author">by {{ b.author }}</div>
+              <div class="book-meta" style="color: var(--color-primary); font-weight: 600;">
+                ⏱️ {{ b.estimated_duration or 30 }} mins (Δ {{ item.diff }}m)
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p style="font-size: 0.9rem; color: var(--color-text-secondary); margin: 0;">Select a reading duration above to discover books formatted for your available schedule.</p>
+    {% endif %}
+  </section>
+
+  <!-- 3. Hidden Gems Section -->
+  <section style="margin-bottom: 3rem;">
+    <div style="margin-bottom: 1.25rem;">
+      <h3 style="margin-bottom: 4px;">💎 Hidden Gems of The Atelier</h3>
+      <p style="color: var(--color-text-muted); font-size: 0.95rem; margin: 0;">Outstanding, highly rated titles under 350 pages that reward your investment of time.</p>
+    </div>
+
+    <div class="books-grid">
+      {% for book in hidden_gems %}
+        <div class="book-card">
+          <a href="{{ url_for('books.detail', book_id=book.id) }}" class="book-cover-container">
+            <img src="{{ book.cover_url or book.get_fallback_svg() }}" alt="{{ book.title }}" class="book-cover-img" data-fallback="{{ book.get_fallback_svg() }}">
+            <div class="book-badge-overlay">
+              <span class="score-badge score-badge-high">⭐ {{ book.rating }}</span>
+            </div>
+          </a>
+          <div class="book-info">
+            <a href="{{ url_for('books.detail', book_id=book.id) }}">
+              <div class="book-title">{{ book.title }}</div>
+            </a>
+            <div class="book-author">by {{ book.author }}</div>
+            <div class="book-meta">
+              <span>📄 {{ book.page_count }} pages</span>
+              <span>•</span>
+              <span>⏱️ {{ book.estimated_duration or 30 }}m</span>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </section>
+
+</div>
+{% endblock %}

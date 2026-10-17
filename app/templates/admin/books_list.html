@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Books — BookWise Atelier{% endblock %}
+
+{% block content %}
+<div class="atelier-container" style="padding-top: 2rem;">
+
+  <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2rem; border-bottom: 1px solid var(--color-border); padding-bottom: 1rem; flex-wrap: wrap; gap: 16px;">
+    <div>
+      <a href="{{ url_for('admin.dashboard') }}" style="font-size: 0.85rem; color: var(--color-text-muted);">&larr; Back to Admin Dashboard</a>
+      <h1 style="font-family: var(--font-serif); margin-top: 4px; margin-bottom: 6px;">Catalogue Management</h1>
+      <p style="color: var(--color-text-secondary); margin: 0;">View, edit, or remove books from the BookWise catalogue.</p>
+    </div>
+
+    <a href="{{ url_for('admin.add_book') }}" class="btn-atelier btn-atelier-gold btn-atelier-sm">
+      + Add New Book
+    </a>
+  </div>
+
+  <!-- Search Filter -->
+  <form method="GET" action="{{ url_for('admin.books_list') }}" style="margin-bottom: 1.5rem; display: flex; gap: 10px; max-width: 480px;">
+    <input type="text" name="q" value="{{ search }}" placeholder="Search by title or author..." class="form-control-atelier" style="font-size: 0.9rem;">
+    <button type="submit" class="btn-atelier btn-atelier-primary btn-atelier-sm">Search</button>
+  </form>
+
+  <div class="atelier-card" style="padding: 0; overflow-x: auto;">
+    <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
+      <thead>
+        <tr style="border-bottom: 2px solid var(--color-border); background-color: var(--color-bg-subtle); text-align: left;">
+          <th style="padding: 12px 16px;">ID</th>
+          <th style="padding: 12px 16px;">Cover</th>
+          <th style="padding: 12px 16px;">Title &amp; Author</th>
+          <th style="padding: 12px 16px;">Genres</th>
+          <th style="padding: 12px 16px;">Rating</th>
+          <th style="padding: 12px 16px;">Duration</th>
+          <th style="padding: 12px 16px; text-align: right;">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for b in books %}
+          <tr style="border-bottom: 1px solid var(--color-border-subtle);">
+            <td style="padding: 12px 16px; color: var(--color-text-muted);">#{{ b.id }}</td>
+            <td style="padding: 12px 16px;">
+              <img src="{{ b.cover_url or b.get_fallback_svg() }}" alt="{{ b.title }}" style="width: 36px; height: 50px; object-fit: cover; border-radius: 3px;" class="book-cover-img" data-fallback="{{ b.get_fallback_svg() }}">
+            </td>
+            <td style="padding: 12px 16px;">
+              <a href="{{ url_for('books.detail', book_id=b.id) }}" style="font-weight: 600;">{{ b.title }}</a>
+              <div style="font-size: 0.8rem; color: var(--color-text-secondary); font-style: italic;">{{ b.author }}</div>
+            </td>
+            <td style="padding: 12px 16px;">
+              {{ b.genres_list[:2]|join(', ') }}
+            </td>
+            <td style="padding: 12px 16px;">⭐ {{ b.rating }}</td>
+            <td style="padding: 12px 16px;">⏱️ {{ b.estimated_duration or 30 }}m</td>
+            <td style="padding: 12px 16px; text-align: right;">
+              <div style="display: inline-flex; gap: 6px;">
+                <a href="{{ url_for('admin.edit_book', book_id=b.id) }}" class="btn-atelier btn-atelier-secondary btn-atelier-sm" style="font-size: 0.75rem; padding: 4px 8px;">
+                  Edit
+                </a>
+                <form method="POST" action="{{ url_for('admin.delete_book', book_id=b.id) }}" onsubmit="return confirm('Delete this book permanently from the catalogue?');" style="display: inline;">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button type="submit" class="btn-atelier btn-atelier-secondary btn-atelier-sm" style="color: var(--color-danger); font-size: 0.75rem; padding: 4px 8px;">
+                    Delete
+                  </button>
+                </form>
+              </div>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Pagination -->
+  {% if pagination.pages > 1 %}
+    <div style="display: flex; justify-content: center; gap: 8px; margin-top: 2rem;">
+      {% if pagination.has_prev %}
+        <a href="{{ url_for('admin.books_list', page=pagination.prev_num, q=search) }}" class="btn-atelier btn-atelier-secondary btn-atelier-sm">&laquo; Prev</a>
+      {% endif %}
+      <span style="font-size: 0.85rem; color: var(--color-text-muted); padding: 6px 12px;">Page {{ pagination.page }} of {{ pagination.pages }}</span>
+      {% if pagination.has_next %}
+        <a href="{{ url_for('admin.books_list', page=pagination.next_num, q=search) }}" class="btn-atelier btn-atelier-secondary btn-atelier-sm">Next &raquo;</a>
+      {% endif %}
+    </div>
+  {% endif %}
+
+</div>
+{% endblock %}

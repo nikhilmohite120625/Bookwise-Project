@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} — BookWise Atelier Admin{% endblock %}
+
+{% block content %}
+<div class="atelier-container" style="max-width: 820px; padding-top: 2rem;">
+
+  <div style="margin-bottom: 2rem; border-bottom: 1px solid var(--color-border); padding-bottom: 1rem;">
+    <a href="{{ url_for('admin.books_list') }}" style="font-size: 0.85rem; color: var(--color-text-muted);">&larr; Back to Catalogue List</a>
+    <h1 style="font-family: var(--font-serif); margin-top: 4px; margin-bottom: 6px;">{{ title }}</h1>
+    <p style="color: var(--color-text-secondary); margin: 0;">Provide detailed metadata for accurate categorization and explainable recommendations.</p>
+  </div>
+
+  <div class="atelier-card" style="padding: 2rem;">
+    <form method="POST">
+      {{ form.hidden_tag() }}
+
+      <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 16px;">
+        <div class="form-group-atelier">
+          {{ form.title.label(class="form-label-atelier") }}
+          {{ form.title(class="form-control-atelier", placeholder="Book Title") }}
+          {% for error in form.title.errors %}
+            <div style="color: var(--color-danger); font-size: 0.8rem;">{{ error }}</div>
+          {% endfor %}
+        </div>
+
+        <div class="form-group-atelier">
+          {{ form.author.label(class="form-label-atelier") }}
+          {{ form.author(class="form-control-atelier", placeholder="Author Name") }}
+          {% for error in form.author.errors %}
+            <div style="color: var(--color-danger); font-size: 0.8rem;">{{ error }}</div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <div class="form-group-atelier">
+        {{ form.description.label(class="form-label-atelier") }}
+        {{ form.description(class="form-control-atelier", rows=4, placeholder="Detailed plot summary or book themes...") }}
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+        <div class="form-group-atelier">
+          {{ form.genres.label(class="form-label-atelier") }}
+          {{ form.genres(class="form-control-atelier", placeholder="e.g. Fiction, Mystery, Thriller") }}
+          <small style="color: var(--color-text-muted);">Separate with commas</small>
+        </div>
+
+        <div class="form-group-atelier">
+          {{ form.keywords.label(class="form-label-atelier") }}
+          {{ form.keywords(class="form-control-atelier", placeholder="e.g. detective, crime, london, clues") }}
+          <small style="color: var(--color-text-muted);">Separate with commas</small>
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px;">
+        <div class="form-group-atelier">
+          {{ form.language.label(class="form-label-atelier") }}
+          {{ form.language(class="form-control-atelier", placeholder="English") }}
+        </div>
+
+        <div class="form-group-atelier">
+          {{ form.publication_year.label(class="form-label-atelier") }}
+          {{ form.publication_year(class="form-control-atelier", placeholder="e.g. 2021") }}
+        </div>
+
+        <div class="form-group-atelier">
+          {{ form.age_suitability.label(class="form-label-atelier") }}
+          {{ form.age_suitability(class="form-control-atelier") }}
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px;">
+        <div class="form-group-atelier">
+          {{ form.estimated_duration.label(class="form-label-atelier") }}
+          {{ form.estimated_duration(class="form-control-atelier", placeholder="Minutes per session/chapter") }}
+        </div>
+
+        <div class="form-group-atelier">
+          {{ form.rating.label(class="form-label-atelier") }}
+          {{ form.rating(class="form-control-atelier", placeholder="4.5") }}
+        </div>
+
+        <div class="form-group-atelier">
+          {{ form.page_count.label(class="form-label-atelier") }}
+          {{ form.page_count(class="form-control-atelier", placeholder="Total Pages") }}
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 16px;">
+        <div class="form-group-atelier">
+          {{ form.isbn.label(class="form-label-atelier") }}
+          {{ form.isbn(class="form-control-atelier", placeholder="978-...") }}
+        </div>
+
+        <div class="form-group-atelier">
+          {{ form.cover_url.label(class="form-label-atelier") }}
+          {{ form.cover_url(class="form-control-atelier", placeholder="https://images.unsplash.com/...") }}
+          <small style="color: var(--color-text-muted);">Leave empty to use automatic Atelier SVG cover fallback</small>
+        </div>
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 1.5rem;">
+        <a href="{{ url_for('admin.books_list') }}" class="btn-atelier btn-atelier-secondary">Cancel</a>
+        <button type="submit" class="btn-atelier btn-atelier-gold">Save Book to Catalogue</button>
+      </div>
+    </form>
+  </div>
+
+</div>
+{% endblock %}

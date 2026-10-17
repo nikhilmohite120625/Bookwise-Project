@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block title %}Sign In — BookWise Atelier{% endblock %}
+
+{% block content %}
+<div class="atelier-container" style="max-width: 480px; margin: 3rem auto;">
+  <div class="atelier-card" style="padding: 2.5rem;">
+    <div style="text-align: center; margin-bottom: 2rem;">
+      <h2 style="font-family: var(--font-serif); margin-bottom: 6px;">Sign In to The Atelier</h2>
+      <p style="color: var(--color-text-secondary); font-size: 0.95rem;">Enter your credentials to access your reading companion.</p>
+    </div>
+
+    <form method="POST" action="{{ url_for('auth.login', next=request.args.get('next')) }}">
+      {{ form.hidden_tag() }}
+
+      <div class="form-group-atelier">
+        {{ form.email.label(class="form-label-atelier") }}
+        {{ form.email(class="form-control-atelier", placeholder="reader@example.com") }}
+        {% for error in form.email.errors %}
+          <div style="color: var(--color-danger); font-size: 0.8rem; margin-top: 4px;">{{ error }}</div>
+        {% endfor %}
+      </div>
+
+      <div class="form-group-atelier">
+        {{ form.password.label(class="form-label-atelier") }}
+        {{ form.password(class="form-control-atelier", placeholder="••••••••") }}
+        {% for error in form.password.errors %}
+          <div style="color: var(--color-danger); font-size: 0.8rem; margin-top: 4px;">{{ error }}</div>
+        {% endfor %}
+      </div>
+
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem;">
+        <label style="display: flex; align-items: center; gap: 8px; font-size: 0.85rem; cursor: pointer;">
+          {{ form.remember() }}
+          <span>{{ form.remember.label.text }}</span>
+        </label>
+      </div>
+
+      <button type="submit" class="btn-atelier btn-atelier-primary" style="width: 100%; padding: 12px;">
+        Sign In
+      </button>
+    </form>
+
+    <div style="text-align: center; margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid var(--color-border); font-size: 0.9rem; color: var(--color-text-muted);">
+      Don't have an Atelier account yet?
+      <a href="{{ url_for('auth.register') }}" style="color: var(--color-primary); font-weight: 600;">Join here</a>
+    </div>
+
+    <!-- Demo Admin Access Helper Notice -->
+    <div style="margin-top: 1.5rem; background: var(--color-bg-card); border: 1px dashed var(--color-border-gold); padding: 12px; border-radius: var(--radius-md); font-size: 0.8rem; color: var(--color-text-secondary); text-align: center;">
+      <strong>Curator Demo Credentials:</strong><br>
+      Email: <code>admin@bookwise.atelier</code> | Password: <code>AdminAtelier2026!</code>
+    </div>
+  </div>
+</div>
+{% endblock %}

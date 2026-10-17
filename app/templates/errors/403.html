@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block title %}Access Restricted (403) — BookWise Atelier{% endblock %}
+
+{% block content %}
+<div class="atelier-container" style="max-width: 600px; padding: 5rem 0; text-align: center;">
+  <div class="atelier-card empty-state" style="padding: 3rem 2rem;">
+    <div class="empty-state-icon">🔒</div>
+    <h1 style="font-family: var(--font-serif); font-size: 2.2rem; margin-bottom: 8px;">Access Restricted</h1>
+    <p style="color: var(--color-text-secondary); margin-bottom: 2rem;">
+      You do not possess curator permissions to access this restricted wing of the Atelier.
+    </p>
+    <a href="{{ url_for('main.index') }}" class="btn-atelier btn-atelier-primary">Return to Safety</a>
+  </div>
+</div>
+{% endblock %}
